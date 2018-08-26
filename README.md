@@ -9,7 +9,7 @@ So I built my own 'transmitter'.
 The DCF77 signal is a 77.5kHz carrier, that is amplitude modulated with
 attenuations every second of the minute except the 59th to synchronize.
 The length of the attentuation (100ms and 200ms) denotes bit values 0 and 1
-respectively so each in each minute, 59 bits can be transferred, containing
+respectively so in each minute, 59 bits can be transferred, containing
 date and time information.
 
 The Raspberry Pi has ways to create frequencies by integer division and
@@ -55,7 +55,8 @@ An interesting observation: you see that the watch already gets into fully
 set mode after about 50 seconds, even though there is the year data
 after that. This particular watch never shows the year, so it just ignores that.
 
-<a href="https://youtu.be/WzZnGimRj60"><img src="img/dcf77-video.jpg" width="50%"></a>
+<p align="center"><a href="https://youtu.be/WzZnGimRj60">
+  <img src="img/dcf77-video.jpg" width="50%"></a></p>
 
 [DCF77]: https://en.wikipedia.org/wiki/DCF77
 [Raspberry Pi GPIO]: https://www.raspberrypi.org/documentation/usage/gpio/
