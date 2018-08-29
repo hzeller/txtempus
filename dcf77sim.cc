@@ -21,6 +21,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <signal.h>
+#include <getopt.h>
+#include <limits.h>
+#include <stdlib.h>
 
 #include "gpio.h"
 #include "time-signal-source.h"
@@ -39,9 +42,12 @@ static void WaitUntil(const struct timespec &ts) {
   clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 }
 
-static void StartCarrier(GPIO *gpio, int frequency) {
+static void StartCarrier(GPIO *gpio, bool verbose, int frequency) {
   double f = gpio->StartClock(frequency);
-  fprintf(stderr, "Requesting %d Hz, getting %.3f Hz carrier\n", frequency, f);
+  if (verbose) {
+    fprintf(stderr, "Requesting %d Hz, getting %.3f Hz carrier\n",
+            frequency, f);
+  }
 }
 
 static void SetPower(GPIO *gpio, bool high) {
@@ -53,7 +59,60 @@ static void SetPower(GPIO *gpio, bool high) {
   }
 }
 
-int main() {
+static time_t ParseTime(const char *time_string) {
+  struct tm tm = {};
+  const char *final_pos = strptime(time_string, "%Y-%m-%d %H:%M", &tm);
+  if (!final_pos || *final_pos)
+    return 0;
+  tm.tm_isdst = -1;
+  return mktime(&tm);
+}
+
+static void PrintTime(time_t t) {
+  char buf[32];
+  struct tm tm;
+  localtime_r(&t, &tm);
+  strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
+  fprintf(stderr, "%s", buf);
+}
+
+static int usage(const char *msg, const char *progname) {
+  fprintf(stderr, "%susage: %s [options]\n"
+          "Options:\n"
+          "\t-r <minutes>          : Run for limited number of minutes. "
+          "(default: no limit)\n"  // in truth: a couple thousand years...
+          "\t-t 'YYYY-MM-DD HH:MM' : Transmit the given time (default: now)\n"
+          "\t-v                    : Verbose\n"
+          "\t-h                    : This help.\n",
+          msg, progname);
+  return 1;
+}
+
+int main(int argc, char *argv[]) {
+  const time_t now = TruncateTo(time(NULL), 60);  // Time signals: full minute
+  time_t chosen_time = now;
+  bool verbose = false;
+  int ttl = INT_MAX;
+  int opt;
+  while ((opt = getopt(argc, argv, "t:r:vh")) != -1) {
+    switch (opt) {
+    case 'v':
+      verbose = true;
+      break;
+    case 't':
+      chosen_time = ParseTime(optarg);
+      if (chosen_time <= 0) return usage("Invalid time string\n", argv[0]);
+      break;
+    case 'r':
+      ttl = atoi(optarg);
+      break;
+    default:
+      return usage("", argv[0]);
+    }
+  }
+
+  const int time_offset = chosen_time - now;
+
   GPIO gpio;
   if (!gpio.Init()) {
     fprintf(stderr, "Need to be root\n");
@@ -72,13 +131,13 @@ int main() {
   sp.sched_priority = 99;
   sched_setscheduler(0, SCHED_FIFO, &sp);
 
-  StartCarrier(&gpio, time_source->GetCarrierFrequencyHz());
+  StartCarrier(&gpio, verbose, time_source->GetCarrierFrequencyHz());
 
-  // If tarted in the middle of a minute, we quickly slide down to current sec.
-  const time_t first_minute = TruncateTo(time(NULL),  60);
   struct timespec target_wait;
-  for (time_t minute_start = first_minute; !interrupted; minute_start += 60) {
-    time_source->PrepareMinute(minute_start);
+  for (time_t minute_start = now; !interrupted && ttl--; minute_start += 60) {
+    const time_t transmit_time = minute_start + time_offset;
+    if (verbose) PrintTime(transmit_time);
+    time_source->PrepareMinute(transmit_time);
 
     for (int second = 0; second < 60 && !interrupted; ++second) {
       const TimeSignalSource::SecondModulation &modulation
@@ -98,10 +157,10 @@ int main() {
         target_wait.tv_nsec += m.duration_ms * 1000000;
         WaitUntil(target_wait);
       }
-      fprintf(stderr, ":%02d\b\b\b", second);
+      if (verbose) fprintf(stderr, "\b\b\b:%02d", second);
     }
+    if (verbose) fprintf(stderr, "\n");
   }
 
-  fprintf(stderr, "\nReceived interrupt (sig %d). Exiting.\n", interrupted);
   gpio.StopClock();
 }

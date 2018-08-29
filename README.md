@@ -43,7 +43,21 @@ watch/clock:
 
 ```
  make
- sudo ./dcf77sim
+ sudo ./dcf77sim -v
+```
+There are a few options you can set. The `-r` option is useful to have the
+program run only for the few minutes it might take for a clock to synchronize.
+
+By default, the current system time is transmitted. The `-t` option allows
+different times for testing.
+
+```
+usage: ./dcf77sim [options]
+Options:
+        -r <minutes>          : Run for limited number of minutes. (default: no limit)
+        -t 'YYYY-MM-DD HH:MM' : Transmit the given time (default: now)
+        -v                    : Verbose
+        -h                    : This help.
 ```
 
 In the video below, you can see how a watch is set with this transmitter.
