@@ -1,6 +1,6 @@
-CXXFLAGS=-Wall -O3
+CXXFLAGS=-Wall -O3 -std=c++11
 
-dcf77sim: dcf77sim.o gpio.o
+dcf77sim: dcf77sim.o dcf77-source.o gpio.o
 	$(CXX) -o $@ $^
 
 clean:

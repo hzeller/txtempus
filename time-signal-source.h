@@ -1,0 +1,77 @@
+// -*- mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; -*-
+// Copyright (C) 2018 Henner Zeller <h.zeller@acm.org>
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation version 2.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://gnu.org/licenses/gpl-2.0.txt>
+
+#ifndef TIMETRANSMITTER_CLOCKGEN_H
+#define TIMETRANSMITTER_CLOCKGEN_H
+
+#include <time.h>
+#include <stdint.h>
+#include <vector>
+
+enum class CarrierPower {
+  LOW, HIGH
+};
+struct ModulationDuration {
+  CarrierPower power;
+  int duration_ms;
+};
+
+// Base class for different types of time signal sources.
+class TimeSignalSource {
+public:
+  typedef std::vector<ModulationDuration> SecondModulation;
+
+  virtual ~TimeSignalSource(){}
+
+  // Carrier frequency of this particular time source.
+  virtual int GetCarrierFrequencyHz() const = 0;
+
+  // Called once at the beginning of a minute starting with
+  // the transmission to prepare the necessary data bits to be
+  // sent.
+  // Note, typically time singals are sent to be valid when the
+  // end of the minute is reached, so typical implementations would need to
+  // add 60 seconds to this.
+  // The provided time is guaranteed to be an even minute, i.e. divisible by 60.
+  virtual void PrepareMinute(time_t t) = 0;
+
+  // Returns a vector of modulation transitions to be sent out for the
+  // particular second within the minute mentioned in PrepareMinute().
+  // The method should return a sequence of power-levels and durations in
+  // milliseconds. The last transition stays for the remainder of the second,
+  // so it is good practice to set the last duration to zero to auto-fill.
+  // e.g. {{CarrierPower::HIGH, 200},{CarrierPower::LOW, 0}}
+  //
+  // All numbers must add up to less or equal 1000ms.
+  //
+  // Value of second can be between 0..59, or up to 60 with leap seconds
+  // (leap seconds not implemented yet).
+  virtual SecondModulation GetModulationForSecond(int second) = 0;
+};
+
+
+// -- Various implementations.
+class DCF77TimeSignalSource : public TimeSignalSource {
+public:
+  int GetCarrierFrequencyHz() const final { return 77500; }
+  void PrepareMinute(time_t t);
+  SecondModulation GetModulationForSecond(int second);
+
+private:
+  typedef uint64_t MinuteData;
+  MinuteData time_bits_;
+};
+
+#endif // TIMETRANSMITTER_CLOCKGEN_H
