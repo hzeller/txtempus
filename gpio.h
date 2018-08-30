@@ -49,6 +49,9 @@ class GPIO {
   double StartClock(double frequency_hertz);
   void StopClock();
 
+  // Switches the output of the currently running clock.
+  void EnableClockOutput(bool b);
+
  private:
   volatile uint32_t *gpio_port_;
   volatile uint32_t *gpio_set_bits_;

@@ -157,7 +157,7 @@ double GPIO::StartClock(double requested_freq) {
 
   clock_reg_[ctl] |= CLK_PASSWD | CLK_CTL_ENAB;
 
-  ALT0_GPIO(4);  // Pinmux GPIO4 into outputting clock.
+  EnableClockOutput(true);
 
   return kClockSources[best_clock_source].frequency / (divI + divF/1024.0);
 }
@@ -169,6 +169,15 @@ void GPIO::StopClock() {
   // Wait until clock confirms not to be busy anymore.
   while (clock_reg_[ctl] & CLK_CTL_BUSY) {
     usleep(10);
+  }
+  EnableClockOutput(false);
+}
+
+void GPIO::EnableClockOutput(bool on) {
+  if (on) {
+    ALT0_GPIO(4);  // Pinmux GPIO4 into outputting clock.
+  } else {
+    INP_GPIO(4);
   }
 }
 

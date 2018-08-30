@@ -21,7 +21,7 @@
 #include <vector>
 
 enum class CarrierPower {
-  LOW, HIGH
+  OFF, LOW, HIGH
 };
 struct ModulationDuration {
   CarrierPower power;

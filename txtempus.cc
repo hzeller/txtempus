@@ -13,7 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://gnu.org/licenses/gpl-2.0.txt>
 //
-// DCF77 simulating transmitter, to be run on the Raspberry Pi.
+// Time-signal simulating transmitter, supporting various types such
+// as DCF77, WWVB, ... to be run on the Raspberry Pi.
 // Make sure to stay within the regulation limits of HF transmissions!
 
 #include <getopt.h>
@@ -41,7 +42,8 @@ namespace {
 volatile sig_atomic_t interrupted = 0;
 void InterruptHandler(int signo) { interrupted = signo; }
 
-time_t TruncateTo(time_t t, int v) { return t - t % v; }
+// Truncate "t" so that it is multiple of "d"
+time_t TruncateTo(time_t t, int d) { return t - t % d; }
 
 void WaitUntil(const struct timespec &ts) {
   if (dryrun) return;
@@ -57,17 +59,25 @@ void StartCarrier(GPIO *gpio, int frequency) {
   }
 }
 
-void SetPower(GPIO *gpio, bool high) {
+void SetTxPower(GPIO *gpio, CarrierPower power) {
   if (dryrun) return;
-  if (high) {
-    gpio->RequestInput(kAttenuationGPIOBit);   // High-Z
-  } else {
+  switch (power) {
+  case CarrierPower::OFF:
+    gpio->EnableClockOutput(false);
+    break;
+  case CarrierPower::LOW:
     gpio->RequestOutput(kAttenuationGPIOBit);  // Pull down.
     gpio->ClearBits(kAttenuationGPIOBit);
+    gpio->EnableClockOutput(true);
+    break;
+  case CarrierPower::HIGH:
+    gpio->RequestInput(kAttenuationGPIOBit);   // High-Z
+    gpio->EnableClockOutput(true);
+    break;
   }
 }
 
-time_t ParseTime(const char *time_string) {
+time_t ParseLocalTime(const char *time_string) {
   struct tm tm = {};
   const char *final_pos = strptime(time_string, "%Y-%m-%d %H:%M", &tm);
   if (!final_pos || *final_pos)
@@ -76,7 +86,7 @@ time_t ParseTime(const char *time_string) {
   return mktime(&tm);
 }
 
-void PrintTime(time_t t) {
+void PrintLocalTime(time_t t) {
   char buf[32];
   struct tm tm;
   localtime_r(&t, &tm);
@@ -84,19 +94,20 @@ void PrintTime(time_t t) {
   fprintf(stderr, "%s", buf);
 }
 
+// Show a full modulation of one second as little ASCII-art.
 void PrintModulationChart(const TimeSignalSource::SecondModulation &mod) {
+  static const int kMsPerDash = 50;
   fprintf(stderr, " [");
-  const int kMsPerDash = 50;
   int running_ms = 0;
   int target_ms = 0;
   bool power = false;
   for (auto m : mod) {
     power = (m.power == CarrierPower::HIGH);
     target_ms += m.duration_ms;
-    for (/**/; running_ms < target_ms; running_ms+=kMsPerDash)
+    for (/**/; running_ms < target_ms; running_ms += kMsPerDash)
       fprintf(stderr, "%s", power ? "#":"_");
   }
-  for (/**/; running_ms < 1000; running_ms+=kMsPerDash)
+  for (/**/; running_ms < 1000; running_ms += kMsPerDash)
     fprintf(stderr, "%s", power ? "#":"_");
   fprintf(stderr, "]\n");
 }
@@ -131,7 +142,7 @@ int main(int argc, char *argv[]) {
       verbose = true;
       break;
     case 't':
-      chosen_time = ParseTime(optarg);
+      chosen_time = ParseLocalTime(optarg);
       if (chosen_time <= 0) return usage("Invalid time string\n", argv[0]);
       break;
     case 'r':
@@ -182,7 +193,7 @@ int main(int argc, char *argv[]) {
   struct timespec target_wait;
   for (time_t minute_start = now; !interrupted && ttl--; minute_start += 60) {
     const time_t transmit_time = minute_start + time_offset;
-    if (verbose) PrintTime(transmit_time);
+    if (verbose) PrintLocalTime(transmit_time);
     if (dryrun) fprintf(stderr, " -> tx-modulation\n");
     time_source->PrepareMinute(transmit_time);
 
@@ -199,7 +210,7 @@ int main(int argc, char *argv[]) {
       // Depending on the time source, there can be multiple amplitude
       // modulation changes per second.
       for (auto m : modulation) {
-        SetPower(&gpio, m.power == CarrierPower::HIGH);
+        SetTxPower(&gpio, m.power);
         if (m.duration_ms == 0) break; // last one.
         target_wait.tv_nsec += m.duration_ms * 1000000;
         WaitUntil(target_wait);
