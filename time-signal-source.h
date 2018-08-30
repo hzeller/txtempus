@@ -41,8 +41,8 @@ public:
   // Called once at the beginning of a minute starting with
   // the transmission to prepare the necessary data bits to be
   // sent.
-  // Note, typically time singals are sent to be valid when the
-  // end of the minute is reached, so typical implementations would need to
+  // Note, some time singals are sent to be valid when the
+  // end of the minute is reached, so these implementations would need to
   // add 60 seconds to this.
   // The provided time is guaranteed to be an even minute, i.e. divisible by 60.
   virtual void PrepareMinute(time_t t) = 0;
@@ -66,12 +66,21 @@ public:
 class DCF77TimeSignalSource : public TimeSignalSource {
 public:
   int GetCarrierFrequencyHz() const final { return 77500; }
-  void PrepareMinute(time_t t);
-  SecondModulation GetModulationForSecond(int second);
+  void PrepareMinute(time_t t) final;
+  SecondModulation GetModulationForSecond(int second) final;
 
 private:
-  typedef uint64_t MinuteData;
-  MinuteData time_bits_;
+  uint64_t time_bits_;
+};
+
+class WWVBTimeSignalSource : public TimeSignalSource {
+public:
+  int GetCarrierFrequencyHz() const final { return 60000; }
+  void PrepareMinute(time_t t) final;
+  SecondModulation GetModulationForSecond(int second) final;
+
+private:
+  uint64_t time_bits_;
 };
 
 #endif // TIMETRANSMITTER_CLOCKGEN_H

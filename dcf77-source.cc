@@ -25,7 +25,7 @@ static uint64_t parity(uint64_t d, uint8_t from, uint8_t to_including) {
 }
 
 void DCF77TimeSignalSource::PrepareMinute(time_t t) {
-    t += 60;
+    t += 60;  // We're sending the _upcoming_ minute.
     struct tm breakdown;
     localtime_r(&t, &breakdown);
 

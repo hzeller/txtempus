@@ -16,14 +16,17 @@
 // DCF77 simulating transmitter, to be run on the Raspberry Pi.
 // Make sure to stay within the regulation limits of HF transmissions!
 
-#include <sched.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <time.h>
-#include <signal.h>
 #include <getopt.h>
 #include <limits.h>
+#include <sched.h>
+#include <signal.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <strings.h>
+
+#include <string>
 
 #include "gpio.h"
 #include "time-signal-source.h"
@@ -31,18 +34,22 @@
 // The GPIO bit that is pulled down for attenuation of the signal.
 const uint32_t kAttenuationGPIOBit = (1<<17);
 
+static bool verbose = false;
+static bool dryrun = false;
+
+namespace {
 volatile sig_atomic_t interrupted = 0;
-static void InterruptHandler(int signo) {
-  interrupted = signo;
-}
+void InterruptHandler(int signo) { interrupted = signo; }
 
-static time_t TruncateTo(time_t t, int v) { return t - t % v; }
+time_t TruncateTo(time_t t, int v) { return t - t % v; }
 
-static void WaitUntil(const struct timespec &ts) {
+void WaitUntil(const struct timespec &ts) {
+  if (dryrun) return;
   clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 }
 
-static void StartCarrier(GPIO *gpio, bool verbose, int frequency) {
+void StartCarrier(GPIO *gpio, int frequency) {
+  if (dryrun) return;
   double f = gpio->StartClock(frequency);
   if (verbose) {
     fprintf(stderr, "Requesting %d Hz, getting %.3f Hz carrier\n",
@@ -50,7 +57,8 @@ static void StartCarrier(GPIO *gpio, bool verbose, int frequency) {
   }
 }
 
-static void SetPower(GPIO *gpio, bool high) {
+void SetPower(GPIO *gpio, bool high) {
+  if (dryrun) return;
   if (high) {
     gpio->RequestInput(kAttenuationGPIOBit);   // High-Z
   } else {
@@ -59,7 +67,7 @@ static void SetPower(GPIO *gpio, bool high) {
   }
 }
 
-static time_t ParseTime(const char *time_string) {
+time_t ParseTime(const char *time_string) {
   struct tm tm = {};
   const char *final_pos = strptime(time_string, "%Y-%m-%d %H:%M", &tm);
   if (!final_pos || *final_pos)
@@ -68,7 +76,7 @@ static time_t ParseTime(const char *time_string) {
   return mktime(&tm);
 }
 
-static void PrintTime(time_t t) {
+void PrintTime(time_t t) {
   char buf[32];
   struct tm tm;
   localtime_r(&t, &tm);
@@ -76,25 +84,48 @@ static void PrintTime(time_t t) {
   fprintf(stderr, "%s", buf);
 }
 
-static int usage(const char *msg, const char *progname) {
+void PrintModulationChart(const TimeSignalSource::SecondModulation &mod) {
+  fprintf(stderr, " [");
+  const int kMsPerDash = 50;
+  int running_ms = 0;
+  int target_ms = 0;
+  bool power = false;
+  for (auto m : mod) {
+    power = (m.power == CarrierPower::HIGH);
+    target_ms += m.duration_ms;
+    for (/**/; running_ms < target_ms; running_ms+=kMsPerDash)
+      fprintf(stderr, "%s", power ? "#":"_");
+  }
+  for (/**/; running_ms < 1000; running_ms+=kMsPerDash)
+    fprintf(stderr, "%s", power ? "#":"_");
+  fprintf(stderr, "]\n");
+}
+
+int usage(const char *msg, const char *progname) {
   fprintf(stderr, "%susage: %s [options]\n"
           "Options:\n"
+          "\t-s <service>          : Service; one of 'DCF77', 'WWVB'.\n"
           "\t-r <minutes>          : Run for limited number of minutes. "
           "(default: no limit)\n"  // in truth: a couple thousand years...
-          "\t-t 'YYYY-MM-DD HH:MM' : Transmit the given time (default: now)\n"
-          "\t-v                    : Verbose\n"
+          "\t-t 'YYYY-MM-DD HH:MM' : Transmit the given local time "
+          "(default: now)\n"
+          "\t-v                    : Verbose.\n"
+          "\t-n                    : Dryrun, only showing modulation "
+          "envelope.\n"
           "\t-h                    : This help.\n",
           msg, progname);
   return 1;
 }
 
+}  // end anonymous namespace
+
 int main(int argc, char *argv[]) {
   const time_t now = TruncateTo(time(NULL), 60);  // Time signals: full minute
+  std::string service = "";
   time_t chosen_time = now;
-  bool verbose = false;
   int ttl = INT_MAX;
   int opt;
-  while ((opt = getopt(argc, argv, "t:r:vh")) != -1) {
+  while ((opt = getopt(argc, argv, "t:r:vs:hn")) != -1) {
     switch (opt) {
     case 'v':
       verbose = true;
@@ -106,6 +137,14 @@ int main(int argc, char *argv[]) {
     case 'r':
       ttl = atoi(optarg);
       break;
+    case 's':
+      service = optarg;
+      break;
+    case 'n':
+      dryrun = true;
+      verbose = true;
+      ttl = 1;
+      break;
     default:
       return usage("", argv[0]);
     }
@@ -113,15 +152,22 @@ int main(int argc, char *argv[]) {
 
   const int time_offset = chosen_time - now;
 
+  // Currently only DCF77 and WWVB, but more implementations about to follow
+  // JJY, NPL
+  TimeSignalSource *time_source = nullptr;
+  if (strcasecmp(service.c_str(), "DCF77") == 0)
+    time_source = new DCF77TimeSignalSource();
+  else if (strcasecmp(service.c_str(), "WWVB") == 0)
+    time_source = new WWVBTimeSignalSource();
+
+  if (!time_source)
+    return usage("Please choose a service name with -s option\n", argv[0]);
+
   GPIO gpio;
-  if (!gpio.Init()) {
+  if (!dryrun && !gpio.Init()) {
     fprintf(stderr, "Need to be root\n");
     return 1;
   }
-
-  // Currently only DCF77, but more implementations about to follow
-  // WWVB, JJY, NPL
-  TimeSignalSource *time_source = new DCF77TimeSignalSource();
 
   signal(SIGTERM, InterruptHandler);
   signal(SIGINT, InterruptHandler);
@@ -131,12 +177,13 @@ int main(int argc, char *argv[]) {
   sp.sched_priority = 99;
   sched_setscheduler(0, SCHED_FIFO, &sp);
 
-  StartCarrier(&gpio, verbose, time_source->GetCarrierFrequencyHz());
+  StartCarrier(&gpio, time_source->GetCarrierFrequencyHz());
 
   struct timespec target_wait;
   for (time_t minute_start = now; !interrupted && ttl--; minute_start += 60) {
     const time_t transmit_time = minute_start + time_offset;
     if (verbose) PrintTime(transmit_time);
+    if (dryrun) fprintf(stderr, " -> tx-modulation\n");
     time_source->PrepareMinute(transmit_time);
 
     for (int second = 0; second < 60 && !interrupted; ++second) {
@@ -158,9 +205,11 @@ int main(int argc, char *argv[]) {
         WaitUntil(target_wait);
       }
       if (verbose) fprintf(stderr, "\b\b\b:%02d", second);
+      if (dryrun) PrintModulationChart(modulation);
     }
     if (verbose) fprintf(stderr, "\n");
   }
 
-  gpio.StopClock();
+  if (!dryrun) gpio.StopClock();
+  delete time_source;
 }
