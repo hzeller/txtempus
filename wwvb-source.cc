@@ -35,7 +35,7 @@ void WWVBTimeSignalSource::PrepareMinute(time_t t) {
     time_bits_ = 0;  // All the unused bits are zero.
     time_bits_ |= to_padded5_bcd(breakdown.tm_min) << (59 - 8);
     time_bits_ |= to_padded5_bcd(breakdown.tm_hour) << (59 - 18);
-    time_bits_ |= to_padded5_bcd(breakdown.tm_yday) << (59 - 33);
+    time_bits_ |= to_padded5_bcd(breakdown.tm_yday + 1) << (59 - 33);
     time_bits_ |= to_padded5_bcd(breakdown.tm_year % 100) << (59 - 53);
     time_bits_ |= is_leap_year(breakdown.tm_year + 1900) << (59 - 55);
 
