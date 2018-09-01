@@ -37,10 +37,12 @@ The [JJY] (Japan) is similar to WWVB, with same timings of carrier switches,
 but reversed power levels. Some bits are different. Two senders exist in Japan
 with 40kHz and 60kHz carrier; their simulations can be choosen
 with `YYT40` and `YYT60` in this program.
+_(Not tested with an actual radio clock yet. Please report if it works for you!)_
 
 #### MSF
 The [MSF] (United Kingdom) has yet another encoding, transferring two bits
 per second (but only one of it contains information). Carrier is 60kHz.
+_(Not tested with an actual radio clock yet. Please report if it works for you!)_
 
 ### Minimal External Hardware
 
@@ -56,13 +58,20 @@ Schematic                      | Real world
 
 
 GPIO4 and 17 are on the inner row of the Header pin, three pins inwards on
-the [Raspberry Pi GPIO]-Header. You don't GPIO17 and the 560Ω resistor for `MSF`
-transmission.
+the [Raspberry Pi GPIO]-Header.
 
-Now, wire a loop of wire between the open end of the one 4.7kΩ and  ground
+You don't need GPIO17 and the 560Ω resistor for `MSF` transmission, as that
+works with switching the signal instead of attenuating.
+
+(If you want to go fancy, you can improve the signal with a 470pF
+capacitor between GND and where all resistors meet; add a tuned ferrite core
+antenna etc.)
+
+Now, wire a loop of wire between the open end of the one 4.7kΩ and ground
 (which is conveniently located between GPIO4 and GPIO17 and shown above with
-the black heatshrink). Wrap this wire-loop roughly around the antenna of your
-watch/clock or at least bring in close proximity:
+the black heatshrink). Bring this wire-loop close to the antenna of your
+watch/clock. In the following image it is wrapped around the antenna, but it
+is not strictly needed; anything within a few centimeters should work.
 
 ![](img/watch-wired.jpg)
 
