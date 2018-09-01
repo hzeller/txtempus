@@ -15,7 +15,7 @@ reception.
 **_Before running this program, make sure you follow your local laws with
 regard to restrictions on radio transmissions._**
 
-### Supported Time services
+### Supported Time Service Transmissions
 #### DCF77
 The [DCF77] (Germany) signal is a 77.5kHz carrier, that is amplitude modulated
 with attenuations every second of the minute except the 59th to synchronize.
@@ -32,6 +32,16 @@ The [WWVB] (USA) is on a 60kHz carrier, and also transmits one bit per second
 with different attenuation times (200ms zero, 500ms one; 800ms sync) and
 multiple synchronization bits.
 
+#### JJY
+The [JJY] (Japan) is similar to WWVB, with same timings of carrier switches,
+but reversed power levels. Some bits are different. Two senders exist in Japan
+with 40kHz and 60kHz carrier; their simulations can be choosen
+with `YYT40` and `YYT60` in this program.
+
+#### MSF
+The [MSF] (United Kingdom) has yet another encoding, transferring two bits
+per second (but only one of it contains information). Carrier is 60kHz.
+
 ### Minimal External Hardware
 
 The external hardware is simple: we use the frequency output on one pin and
@@ -46,7 +56,8 @@ Schematic                      | Real world
 
 
 GPIO4 and 17 are on the inner row of the Header pin, three pins inwards on
-the [Raspberry Pi GPIO]-Header.
+the [Raspberry Pi GPIO]-Header. You don't GPIO17 and the 560Ω resistor for `MSF`
+transmission.
 
 Now, wire a loop of wire between the open end of the one 4.7kΩ and  ground
 (which is conveniently located between GPIO4 and GPIO17 and shown above with
@@ -73,7 +84,7 @@ different times for testing.
 ```
 usage: ./txtempus [options]
 Options:
-        -s <service>          : Service; one of 'DCF77', 'WWVB'.
+        -s <service>          : Service; one of 'DCF77', 'WWVB', 'JJY40', 'JJY60', 'MSF'
         -r <minutes>          : Run for limited number of minutes. (default: no limit)
         -t 'YYYY-MM-DD HH:MM' : Transmit the given local time (default: now)
         -v                    : Verbose.
@@ -102,18 +113,19 @@ Underscores show low power carrier, hashes high power:
 
 ```
 $ ./txtempus -n -s wwvb
-2018-08-17 13:22:00 -> tx-modulation upcoming minute
-:00 [________________####]
-:01 [____################]
-:02 [__________##########]
-:03 [____################]
-:04 [____################]
-:05 [____################]
-:06 [____################]
-:07 [__________##########]
-:08 [____################]
-:09 [________________####]
-:10 [____################]
+2018-08-17 13:22:00 -> tx-modulation
+:00 [________##]
+:01 [__########]
+:02 [_____#####]
+:03 [__########]
+:04 [__########]
+:05 [__########]
+:06 [__########]
+:07 [_____#####]
+:08 [__########]
+:09 [________##]
+:10 [__########]
+:11 [__########]
   ... and so on for the whole minute ...
 ```
 
@@ -129,5 +141,7 @@ to astronomic time. These are not set, but usually clocks are fine with it.
 
 [DCF77]: https://en.wikipedia.org/wiki/DCF77
 [WWVB]: https://en.wikipedia.org/wiki/WWVB
+[JJY]: https://en.wikipedia.org/wiki/JJY
+[MSF]: https://en.wikipedia.org/wiki/Time_from_NPL_(MSF)
 [NTP]: https://en.wikipedia.org/wiki/Network_Time_Protocol
 [Raspberry Pi GPIO]: https://www.raspberrypi.org/documentation/usage/gpio/

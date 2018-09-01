@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <strings.h>
+#include <string.h>
 
 #include <string>
 
@@ -96,7 +97,7 @@ void PrintLocalTime(time_t t) {
 
 // Show a full modulation of one second as little ASCII-art.
 void PrintModulationChart(const TimeSignalSource::SecondModulation &mod) {
-  static const int kMsPerDash = 50;
+  static const int kMsPerDash = 100;
   fprintf(stderr, " [");
   int running_ms = 0;
   int target_ms = 0;
@@ -112,10 +113,25 @@ void PrintModulationChart(const TimeSignalSource::SecondModulation &mod) {
   fprintf(stderr, "]\n");
 }
 
+TimeSignalSource *CreateTimeSourceFromName(const char *n) {
+  if (strcasecmp(n, "DCF77") == 0)
+    return new DCF77TimeSignalSource();
+  if (strcasecmp(n, "WWVB") == 0)
+    return new WWVBTimeSignalSource();
+  if (strcasecmp(n, "JJY40") == 0)
+    return new JJY40TimeSignalSource();
+  if (strcasecmp(n, "JJY60") == 0)
+    return new JJY60TimeSignalSource();
+  if (strcasecmp(n, "MSF") == 0)
+    return new MSFTimeSignalSource();
+  return nullptr;
+}
+
 int usage(const char *msg, const char *progname) {
   fprintf(stderr, "%susage: %s [options]\n"
           "Options:\n"
-          "\t-s <service>          : Service; one of 'DCF77', 'WWVB'.\n"
+          "\t-s <service>          : Service; one of "
+          "'DCF77', 'WWVB', 'JJY40', 'JJY60', 'MSF'\n"
           "\t-r <minutes>          : Run for limited number of minutes. "
           "(default: no limit)\n"  // in truth: a couple thousand years...
           "\t-t 'YYYY-MM-DD HH:MM' : Transmit the given local time "
@@ -132,7 +148,7 @@ int usage(const char *msg, const char *progname) {
 
 int main(int argc, char *argv[]) {
   const time_t now = TruncateTo(time(NULL), 60);  // Time signals: full minute
-  std::string service = "";
+  const char *service = "";
   time_t chosen_time = now;
   int ttl = INT_MAX;
   int opt;
@@ -149,7 +165,7 @@ int main(int argc, char *argv[]) {
       ttl = atoi(optarg);
       break;
     case 's':
-      service = optarg;
+      service = strdup(optarg);
       break;
     case 'n':
       dryrun = true;
@@ -163,14 +179,7 @@ int main(int argc, char *argv[]) {
 
   const int time_offset = chosen_time - now;
 
-  // Currently only DCF77 and WWVB, but more implementations about to follow
-  // JJY, NPL
-  TimeSignalSource *time_source = nullptr;
-  if (strcasecmp(service.c_str(), "DCF77") == 0)
-    time_source = new DCF77TimeSignalSource();
-  else if (strcasecmp(service.c_str(), "WWVB") == 0)
-    time_source = new WWVBTimeSignalSource();
-
+  TimeSignalSource *time_source = CreateTimeSourceFromName(service);
   if (!time_source)
     return usage("Please choose a service name with -s option\n", argv[0]);
 

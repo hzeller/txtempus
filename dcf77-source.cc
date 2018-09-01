@@ -30,6 +30,8 @@ void DCF77TimeSignalSource::PrepareMinute(time_t t) {
   localtime_r(&t, &breakdown);
 
   // https://de.wikipedia.org/wiki/DCF77
+  // Little endian bits. So we store big-endian bits and start transmitting
+  // from bit 0
   time_bits_ = 0;
   time_bits_ |= (breakdown.tm_isdst ? 1 : 0) << 17;
   time_bits_ |= (breakdown.tm_isdst ? 0 : 1) << 18;

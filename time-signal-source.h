@@ -83,4 +83,30 @@ private:
   uint64_t time_bits_;
 };
 
+class JJYTimeSignalSource : public TimeSignalSource {
+public:
+  void PrepareMinute(time_t t) final;
+  SecondModulation GetModulationForSecond(int second) final;
+
+private:
+  uint64_t time_bits_;
+};
+
+class JJY60TimeSignalSource : public JJYTimeSignalSource {
+  int GetCarrierFrequencyHz() const final { return 60000; }
+};
+class JJY40TimeSignalSource : public JJYTimeSignalSource {
+  int GetCarrierFrequencyHz() const final { return 40000; }
+};
+
+class MSFTimeSignalSource : public TimeSignalSource {
+public:
+  int GetCarrierFrequencyHz() const final { return 60000; }
+  void PrepareMinute(time_t t) final;
+  SecondModulation GetModulationForSecond(int second) final;
+
+private:
+  uint64_t a_bits_, b_bits_;
+};
+
 #endif // TIMETRANSMITTER_CLOCKGEN_H
