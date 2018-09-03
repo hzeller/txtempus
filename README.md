@@ -41,7 +41,7 @@ _(Not tested with an actual radio clock yet. Please report if it works for you!)
 
 #### MSF
 The [MSF] (United Kingdom) has yet another encoding, transferring two bits
-per second (but only one of it contains information). Carrier is 60kHz.
+per second. Carrier is 60kHz.
 _(Not tested with an actual radio clock yet. Please report if it works for you!)_
 
 ### Minimal External Hardware
@@ -102,8 +102,8 @@ Options:
 ```
 
 In the video below, you can see how a watch is set with this transmitter.
-After it is set to zero, it waits until it sees the end-of-minute mark (which
-does not have any amplitude modulation) and then starts to count on from
+After it is manually reset, it waits until it sees the end-of-minute mark
+(which does not have any amplitude modulation) and then starts to count on from
 second 59, then gathering the data that is following.
 
 An interesting observation: you see that the watch already gets into fully
@@ -115,10 +115,11 @@ after that. This particular watch never shows the year, so it just ignores that.
 
 ### Showing the modulation envelope
 
-Mostly for debugging, the `-n` option allows to observe how the modulation
-of each second looks like. You don't need to be root or run on the Raspberry
-Pi to use this option.
-Underscores show low power carrier, hashes high power:
+Mostly for understanding the protocol, the `-n` option allows to observe how
+the amplitude modulation of each second looks like.
+Unlike the regular transmission, don't need to be root or run on the
+Raspberry Pi to use this option.
+Underscores (`_`) show low power carrier, hashes (`#`) high power:
 
 ```
 $ ./txtempus -n -s wwvb
@@ -141,7 +142,24 @@ $ ./txtempus -n -s wwvb
 ### Limitations
 In some of these protocols, there are additional bits that contain
 information about upcoming daylight saving times, leap seconds or difference
-to astronomic time. These are not set, but usually clocks are fine with it.
+to astronomic time. These are currently not set, but usually clocks are fine
+with it.
+
+### Installation
+
+Each set-up will be different. In my case, I need my DCF77 radio
+watch getting set over night. So I built this watch holder that presents the
+watch upright while the antenna (in the wristband) is close to the
+'transmission coil'. The Raspberry Pi Zero W runs ntpd, PLL locking the system
+time to various stratum 1 NTP servers. This particular watch only checks the
+radio twice a day at 2am and 3am (because these are the typical daylight
+saving switching times), so there is a cron-job that runs `txtempus` around
+these times.
+
+
+watch holder             | ... with watch
+-------------------------|------------------------------
+![](img/nightstand.jpg)  |![](img/nightstand-with-watch.jpg)
 
 <hr/>
 
