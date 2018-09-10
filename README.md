@@ -6,7 +6,7 @@ European radio controlled wristwatch to get its time.
 So I built my own 'transmitter', taking the [NTP] time of a Raspberry Pi and
 generating a modulated radio signal via GPIO pins.
 
-Since many other longwave time stations around the world use similar
+Since many other long-wave time stations around the world use similar
 concepts of sending amplitude modulated time, other time services have been
 added.
 
@@ -19,29 +19,28 @@ regard to restrictions on radio transmissions._**
 #### DCF77
 The [DCF77] (Germany) signal is a 77.5kHz carrier, that is amplitude modulated
 with attenuations every second of the minute except the 59th to synchronize.
-The length of the attentuation (100ms and 200ms) denotes bit values 0 and 1
+The length of the attenuation (100ms and 200ms) denotes bit values 0 and 1
 respectively so in each minute, 59 bits can be transferred, containing
 date and time information.
 
 The Raspberry Pi has ways to create frequencies by integer division and
 fractional jitter around that, which allows us to generate a frequency
-of 77500.003Hz, which is close enough.
+of 77500.003Hz, which is close enough. Can be chosen with `-s DCF77` option.
 
 #### WWVB
 The [WWVB] (USA) is on a 60kHz carrier, and also transmits one bit per second
 with different attenuation times (200ms zero, 500ms one; 800ms sync) and
-multiple synchronization bits.
+multiple synchronization bits. Use `-s WWVB` option for this one.
+
+#### MSF
+The [MSF] (United Kingdom) has yet another encoding, transferring two bits
+per second. Carrier is 60kHz. Option is `-s MSF`.
 
 #### JJY
 The [JJY] (Japan) is similar to WWVB, with same timings of carrier switches,
 but reversed power levels. Some bits are different. Two senders exist in Japan
-with 40kHz and 60kHz carrier; their simulations can be choosen
-with `YYT40` and `YYT60` in this program.
-_(Not tested with an actual radio clock yet. Please report if it works for you!)_
-
-#### MSF
-The [MSF] (United Kingdom) has yet another encoding, transferring two bits
-per second. Carrier is 60kHz.
+with 40kHz and 60kHz carrier; their simulations can be chosen
+with command line options `-s YYT40` and `-s YYT60`.
 _(Not tested with an actual radio clock yet. Please report if it works for you!)_
 
 ### Minimal External Hardware
@@ -63,15 +62,17 @@ the [Raspberry Pi GPIO]-Header.
 You don't need GPIO17 and the 560Ω resistor for `MSF` transmission, as that
 works with switching the signal instead of attenuating.
 
-(If you want to go fancy, you can improve the signal with a 470pF
-capacitor between GND and where all resistors meet; add a tuned ferrite core
-antenna etc.)
+Now, wire a loop of wire between the open end of the one 4.7kΩ and ground as
+'transmission antenna'. Bring this wire-loop close to your radio watch/clock.
+In the following image it is wrapped around the antenna, but it
+is not strictly needed: anything within a few centimeters should work. In
+fact, being too close to the antenna can confuse a sensitive receiver, so you
+might need to experiment with the distance.
 
-Now, wire a loop of wire between the open end of the one 4.7kΩ and ground
-(which is conveniently located between GPIO4 and GPIO17 and shown above with
-the black heatshrink). Bring this wire-loop close to the antenna of your
-watch/clock. In the following image it is wrapped around the antenna, but it
-is not strictly needed; anything within a few centimeters should work.
+(If you want to go fancy, you can improve the signal quality with a couple
+hundred picofarad low-pass capacitor between GND and where all resistors meet;
+add a tuned ferrite core antenna etc. But the simple wire loop should just
+work.)
 
 ![](img/watch-wired.jpg)
 
@@ -145,17 +146,19 @@ information about upcoming daylight saving times, leap seconds or difference
 to astronomic time. These are currently not set, but usually clocks are fine
 with it.
 
+Some time stations also phase-modulate their carrier, txtempus does not.
+
 ### Installation
 
 Each set-up will be different. In my case, I need my DCF77 radio
 watch getting set over night. So I built this watch holder that presents the
 watch upright while the antenna (in the wristband) is close to the
-'transmission coil'. The Raspberry Pi Zero W runs ntpd, PLL locking the system
-time to various stratum 1 NTP servers. This particular watch only checks the
-radio twice a day at 2am and 3am (because these are the typical daylight
-saving switching times), so there is a cron-job that runs `txtempus` around
-these times.
-
+'transmission coil' that is lying flat on the Pi. The bottom of the 3D printed
+case is filled with lead shot in epoxy to provide a stable base.
+The Raspberry Pi Zero W runs ntpd, PLL locking the system time to various
+stratum 1 NTP servers keeping it at atomic time within ±50ms.
+This particular watch only checks the radio twice a day at 2am and 3am, so
+there is a cron-job that runs `txtempus` around these times for a few minutes.
 
 watch holder             | ... with watch
 -------------------------|------------------------------
