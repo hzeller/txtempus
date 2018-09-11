@@ -2,20 +2,22 @@ Radio time station transmitter using the Raspberry Pi
 =====================================================
 
 I am living in a country where there is no [DCF77] sender nearby for my
-European radio controlled wristwatch to get its time.
-So I built my own 'transmitter', taking the [NTP] time of a Raspberry Pi and
-generating a modulated radio signal via GPIO pins.
+European radio controlled wristwatch to get its time. This vintage
+Jungans Mega doesn't have any buttons to set the time, so to bring it back to
+life, I built my own 'transmitter', taking the [NTP] time of a Raspberry Pi
+and generating a modulated signal via GPIO pins to then magnetically couple
+it into the watch ferrite.
 
 Since many other long-wave time stations around the world use similar
 concepts of sending amplitude modulated time, other time services have been
 added.
 
 This program is useful if you have a clock that otherwise does not get any
-reception.
-**_Before running this program, make sure you follow your local laws with
-regard to restrictions on radio transmissions._**
+reception. This magnetical coupling is very low power and only works over a few
+centimeters, but **_before running this program, make sure you follow your
+local laws with regard to restrictions on radio transmissions._**
 
-### Supported Time Service Transmissions
+### Supported Time Services
 #### DCF77
 The [DCF77] (Germany) signal is a 77.5kHz carrier, that is amplitude modulated
 with attenuations every second of the minute except the 59th to synchronize.
@@ -40,7 +42,7 @@ per second. Carrier is 60kHz. Option is `-s MSF`.
 The [JJY] (Japan) is similar to WWVB, with same timings of carrier switches,
 but reversed power levels. Some bits are different. Two senders exist in Japan
 with 40kHz and 60kHz carrier; their simulations can be chosen
-with command line options `-s YYT40` and `-s YYT60`.
+with command line options `-s JJY40` and `-s JJY60`.
 _(Not tested with an actual radio clock yet. Please report if it works for you!)_
 
 ### Minimal External Hardware
@@ -59,20 +61,20 @@ Schematic                      | Real world
 GPIO4 and 17 are on the inner row of the Header pin, three pins inwards on
 the [Raspberry Pi GPIO]-Header.
 
-You don't need GPIO17 and the 560Ω resistor for `MSF` transmission, as that
-works with switching the signal instead of attenuating.
+You don't need GPIO17 and the 560Ω resistor for `MSF`, as that works with
+switching the signal (on-off keying) instead of attenuating.
 
-Now, wire a loop of wire between the open end of the one 4.7kΩ and ground as
-'transmission antenna'. Bring this wire-loop close to your radio watch/clock.
+Now, wire a loop of wire between the open end of the one 4.7kΩ and ground - this
+loop acts as coupling coil to the watch ferrite.
+The signal is very weak, so bring this wire-loop close to your radio
+watch/clock.
 In the following image it is wrapped around the antenna, but it
-is not strictly needed: anything within a few centimeters should work. In
-fact, being too close to the antenna can confuse a sensitive receiver, so you
-might need to experiment with the distance.
+is not strictly needed: anything within a few centimeters should work. Being
+too close to the antenna can confuse a sensitive receiver, so you might need
+to experiment with the distance.
 
 (If you want to go fancy, you can improve the signal quality with a couple
-hundred picofarad low-pass capacitor between GND and where all resistors meet;
-add a tuned ferrite core antenna etc. But the simple wire loop should just
-work.)
+hundred picofarad low-pass capacitor between GND and where all resistors meet).
 
 ![](img/watch-wired.jpg)
 
@@ -102,7 +104,7 @@ Options:
         -h                    : This help.
 ```
 
-In the video below, you can see how a watch is set with this transmitter.
+In the video below, you can see how a watch is set with this set-up.
 After it is manually reset, it waits until it sees the end-of-minute mark
 (which does not have any amplitude modulation) and then starts to count on from
 second 59, then gathering the data that is following.
