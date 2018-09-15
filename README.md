@@ -17,6 +17,12 @@ reception. This magnetical coupling is very low power and only works over a few
 centimeters, but **_before running this program, make sure you follow your
 local laws with regard to restrictions on radio transmissions._**
 
+### Platform
+This runs on a Raspberry Pi. So far, it has been tested on a Pi3 and a
+Pi Zero W. There has been a report of different frequencies generated with
+an older Pi (Bug #1), so until we have a definitive list of available
+clock sources inside these, check out that bug for a workaround.
+
 ### Supported Time Services
 #### DCF77
 The [DCF77] (Germany) signal is a 77.5kHz carrier, that is amplitude modulated

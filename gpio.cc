@@ -161,6 +161,16 @@ double GPIO::StartClock(double requested_freq) {
 
   EnableClockOutput(true);
 
+#if 0
+  // There have been reports of different clock source frequencies. This
+  // helps figuring out which source was picked.
+  fprintf(stderr, "Choose clock %d at %gHz / %.3f = %.3f\n",
+          kClockSources[best_clock_source].src,
+          kClockSources[best_clock_source].frequency,
+          divI + divF/1024.0,
+          kClockSources[best_clock_source].frequency / (divI + divF/1024.0));
+#endif
+
   return kClockSources[best_clock_source].frequency / (divI + divF/1024.0);
 }
 
