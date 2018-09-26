@@ -3,7 +3,7 @@ Radio time station transmitter using the Raspberry Pi
 
 I am living in a country where there is no [DCF77] sender nearby for my
 European radio controlled wristwatch to get its time. This vintage
-Jungans Mega doesn't have any buttons to set the time, so to bring it back to
+Junghans Mega doesn't have any buttons to set the time, so to bring it back to
 life, I built my own 'transmitter', taking the [NTP] time of a Raspberry Pi
 and generating a modulated signal via GPIO pins to then magnetically couple
 it into the watch ferrite.
@@ -68,7 +68,8 @@ GPIO4 and 17 are on the inner row of the Header pin, three pins inwards on
 the [Raspberry Pi GPIO]-Header.
 
 You don't need GPIO17 and the 560Ω resistor for `MSF`, as that works with
-switching the signal (on-off keying) instead of attenuating.
+switching the signal (on-off keying) instead of attenuating. In that case, you
+can replace the sequence of two 4.7kΩ resistors with a single 10kΩ.
 
 Now, wire a loop of wire between the open end of the one 4.7kΩ and ground - this
 loop acts as coupling coil to the watch ferrite.
