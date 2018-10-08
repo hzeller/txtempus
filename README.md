@@ -106,6 +106,7 @@ Options:
         -s <service>          : Service; one of 'DCF77', 'WWVB', 'JJY40', 'JJY60', 'MSF'
         -r <minutes>          : Run for limited number of minutes. (default: no limit)
         -t 'YYYY-MM-DD HH:MM' : Transmit the given local time (default: now)
+        -z <minutes>          : Transmit the time offset from local (default: 0 minutes)
         -v                    : Verbose.
         -n                    : Dryrun, only showing modulation envelope.
         -h                    : This help.
