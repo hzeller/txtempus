@@ -88,6 +88,9 @@ hundred picofarad low-pass capacitor between GND and where all resistors meet).
 ### Transmit!
 
 ```
+ sudo apt-get install git build-essential -y
+ git clone https://github.com/hzeller/txtempus.git
+ cd txtempus
  make
  sudo ./txtempus -v -s DCF77
 ```
