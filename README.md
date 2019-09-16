@@ -161,6 +161,9 @@ with it.
 
 Some time stations also phase-modulate their carrier, txtempus does not.
 
+The frequency generation does not seem to work on a Raspberry Pi4. Please use
+older Pis for now until that is figured out.
+
 ### Installation
 
 Each set-up will be different. In my case, I need my DCF77 radio
