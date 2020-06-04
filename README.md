@@ -176,6 +176,16 @@ stratum 1 NTP servers keeping it at atomic time within ±50ms.
 This particular watch only checks the radio twice a day at 2am and 3am, so
 there is a cron-job that runs `txtempus` around these times for a few minutes.
 
+If you put the following line in your `/etc/crontab` txtempus will be started
+at 1:57 and 2:57 at night and runs for 10 minutes.
+
+```crontab
+57 1,2    * * *   root    /usr/bin/txtempus -s DCF77 -r 10
+```
+
+(this requires that you have installed txtempus so that it can be found
+in `/usr/bin` : `sudo make install`).
+
 watch holder             | ... with watch
 -------------------------|------------------------------
 ![](img/nightstand.jpg)  |![](img/nightstand-with-watch.jpg)
