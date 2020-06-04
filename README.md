@@ -193,15 +193,27 @@ accepted if you know details).
 
 ### Installation
 
+#### Software
+After building, you can install the binary in some standard location
+
+```
+ make
+ sudo make install
+```
+
+#### Watch holder
 Each set-up will be different. In my case, I need my DCF77 radio
 watch getting set over night. So I built this watch holder that presents the
 watch upright while the antenna (in the wristband) is close to the
 'transmission coil' that is lying flat on the Pi. The bottom of the 3D printed
 case is filled with lead shot in epoxy to provide a stable base.
+
 The Raspberry Pi Zero W runs ntpd, PLL locking the system time to various
 stratum 1 NTP servers keeping it at atomic time within ±50ms.
 This particular watch only checks the radio twice a day at 2am and 3am, so
 there is a cron-job that runs `txtempus` around these times for a few minutes.
+
+#### Crontab
 
 If you put the following line in your `/etc/crontab` txtempus will be started
 at 1:57 and 2:57 at night and runs for 10 minutes.
