@@ -56,8 +56,8 @@ _(Not tested with an actual radio clock yet. Please report if it works for you!)
 The external hardware is simple: we use the frequency output on one pin and
 another pin to pull the signal to a lower level for the regular attenuation.
 
-To operate, you need three resistors: 2x4.7kΩ and one 560Ω, wired to GPIO4 and
-GPIO17 like so:
+To operate, you need three resistors: 2x4.7kΩ and one 560Ω (precision not
+critical), wired to GPIO4 and GPIO17 like so:
 
 Schematic                      | Real world
 -------------------------------|------------------------------
@@ -72,18 +72,31 @@ switching the signal (on-off keying) instead of attenuating. In that case, you
 can replace the sequence of two 4.7kΩ resistors with a single 10kΩ.
 
 Now, wire a loop of wire between the open end of the one 4.7kΩ and ground - this
-loop acts as coupling coil to the watch ferrite.
+loop acts as coupling coil to the watch ferrite antenna.
 The signal is very weak, so bring this wire-loop close to your radio
 watch/clock.
-In the following image it is wrapped around the antenna, but it
-is not strictly needed: anything within a few centimeters should work. Being
-too close to the antenna can confuse a sensitive receiver, so you might need
-to experiment with the distance.
 
-(If you want to go fancy, you can improve the signal quality with a couple
-hundred picofarad low-pass capacitor between GND and where all resistors meet).
+In the following image, which was the first experiment, it is wrapped around
+the antenna, but it is not strictly needed: anything within a few centimeters
+should work.
 
 ![](img/watch-wired.jpg)
+
+Being too close to the clock can confuse a sensitive receiver, so you might need
+to experiment with the distance. If your clock/watch is not receiving, add more
+turns to your transmission coil. In the picture at the bottom of the page
+you see that I am using about 10-20 turns on the coil (reddish oval lying on
+the Pi).
+
+This set-up should work for most watches if you have them in close vicinity.
+
+The antenna set-up is intentionally not optimal to just be good enough for
+a local watch but hopefully not causing interference.
+Further improvements of course can be done to the antenna for increased
+transmission distance, such as using a ferrite, making it an LC circuit or
+adding an amplifier. *Only go in this direction after familiarizing yourself
+with allowances of radio transmissions in your area on your frequency of
+interest.*
 
 ### Transmit!
 
@@ -114,6 +127,19 @@ Options:
         -n                    : Dryrun, only showing modulation envelope.
         -h                    : This help.
 ```
+
+#### Don't connect monitor
+
+Don't connect a monitor to the Pi, just operate it headless.
+
+The internal oscillator used is also used for HDMI in the Rasbperry Pi; it will
+be changing its frequency if a monitor is connected and the transmission will
+fail. There should probably be a flag added to generate the frequency from
+an alternative oscillator instead; but until that is implemented, just don't
+connect a monitor and it will work. See the [very wrong frequency] bug
+for details.
+
+#### Action video - watch a watch synchronize
 
 In the video below, you can see how a watch is set with this set-up.
 After it is manually reset, it waits until it sees the end-of-minute mark
@@ -161,8 +187,9 @@ with it.
 
 Some time stations also phase-modulate their carrier, txtempus does not.
 
-The frequency generation does not seem to work on a Raspberry Pi4. Please use
-older Pis for now until that is figured out.
+The frequency generation does **not** seem to **work** on a **Raspberry Pi4**.
+Please use older Pis for now until that is figured out (also pull requests
+accepted if you know details).
 
 ### Installation
 
@@ -201,3 +228,4 @@ watch holder             | ... with watch
 [MSF]: https://en.wikipedia.org/wiki/Time_from_NPL_(MSF)
 [NTP]: https://en.wikipedia.org/wiki/Network_Time_Protocol
 [Raspberry Pi GPIO]: https://www.raspberrypi.org/documentation/usage/gpio/
+[very wrong frequency]: https://github.com/hzeller/txtempus/issues/1
