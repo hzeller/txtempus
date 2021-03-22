@@ -27,6 +27,8 @@ static uint64_t is_leap_year(int year) {
 
 void WWVBTimeSignalSource::PrepareMinute(time_t t) {
   struct tm breakdown;
+  struct tm tomorrow;
+  time_t tomorrow_t;
   gmtime_r(&t, &breakdown);  // Time transmission is always in UTC.
 
   // https://en.wikipedia.org/wiki/WWVB
@@ -39,9 +41,12 @@ void WWVBTimeSignalSource::PrepareMinute(time_t t) {
   time_bits_ |= to_padded5_bcd(breakdown.tm_year % 100) << (59 - 53);
   time_bits_ |= is_leap_year(breakdown.tm_year + 1900) << (59 - 55);
 
-  // Need local time to determine DST status. TODO: announcement bits.
+  // Need local time for now and tomorrow to determine DST status.
   localtime_r(&t, &breakdown);
-  time_bits_ |= (breakdown.tm_isdst ? 0x03 : 0x00) << (59 - 58);
+  tomorrow_t = t + 86400;
+  localtime_r(&tomorrow_t, &tomorrow);
+  time_bits_ |= (tomorrow.tm_isdst ? 1 : 0) << (59 - 57);
+  time_bits_ |= (breakdown.tm_isdst ? 1 : 0) << (59 - 58);
 }
 
 TimeSignalSource::SecondModulation
