@@ -49,7 +49,9 @@ The [JJY] (Japan) is similar to WWVB, with same timings of carrier switches,
 but reversed power levels. Some bits are different. Two senders exist in Japan
 with 40kHz and 60kHz carrier; their simulations can be chosen
 with command line options `-s JJY40` and `-s JJY60`.
-_(Not tested with an actual radio clock yet. Please report if it works for you!)_
+If you're in/or want to display a different time-zone, issue
+[#17](https://github.com/hzeller/txtempus/issues/17) might be of interest to
+you.
 
 ### Minimal External Hardware
 
