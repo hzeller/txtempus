@@ -104,7 +104,7 @@ void PrintModulationChart(const TimeSignalSource::SecondModulation &mod) {
   int running_ms = 0;
   int target_ms = 0;
   bool power = false;
-  for (auto m : mod) {
+  for (const ModulationDuration &m : mod) {
     power = (m.power == CarrierPower::HIGH);
     target_ms += m.duration_ms;
     for (/**/; running_ms < target_ms; running_ms += kMsPerDash)
@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
 
       // Depending on the time source, there can be multiple amplitude
       // modulation changes per second.
-      for (auto m : modulation) {
+      for (const ModulationDuration &m : modulation) {
         SetTxPower(&gpio, m.power);
         if (m.duration_ms == 0) break; // last one.
         target_wait.tv_nsec += m.duration_ms * 1000000;
