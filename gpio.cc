@@ -226,13 +226,14 @@ double GPIO::StartClock(double requested_freq) {
   switch (GetPiModel()) {
   case PI_MODEL_1:
   case PI_MODEL_2:
-  case PI_MODEL_3: f_pllc = 1000.0e6; f_plld = 500.0e6; f_hdmi = 216.0e6; f_regular= 19.2e6; break;
-  case PI_MODEL_4: f_pllc = 3170.0e5; f_plld = 880.0e5; f_hdmi = 216.0e6; f_regular= 5.401750e7; break;
+  case PI_MODEL_3:
+  default: f_pllc = 1000.0e6; f_plld = 500.0e6; f_hdmi = 216.0e6; f_regular= 19.2e6; break;
+  case PI_MODEL_4: f_pllc = 317.0e6; f_plld = 317.0e6; f_hdmi = 216.0e6; f_regular= 54.0175e6; break;
   }
 
   static const struct { int src; double frequency; } kClockSources[] = {
-    { 5,    f_pllc },   // PLLC (note on pi4 3170.0e5 is the closest I can get - but output on scope is 158.xx KHz)
-    { 6,    f_plld },   // PLLD (all over the place on pi4 but in the ballpark)
+    { 5,    f_pllc },   // PLLC (note on pi4 317.0e6 is the closest I can get - but output on scope is 158.43 KHz)
+    { 6,    f_plld },   // PLLD (note on pi4 317.0e6 is the closest I can get - but output on scope is 183.37 KHz)
     { 7,    f_hdmi },   // HDMI  <- this can be problematic if monitor connected (could not find a valid value on pi4)
     { 1, f_regular },   // regular oscillator
   };
