@@ -30,6 +30,9 @@
 #include <time.h>
 #include <unistd.h>
 
+// The GPIO bit that is pulled down for attenuation of the signal.
+const uint32_t kAttenuationGPIOBit = (1<<17);
+  
 // Raspberry 1 and 2 have different base addresses for the periphery
 #define BCM2708_PERI_BASE        0x20000000
 #define BCM2709_PERI_BASE        0x3F000000
@@ -300,4 +303,22 @@ bool GPIO::Init() {
   clock_reg_ = mmap_bcm_register(CLOCK_REGISTER_OFFSET);
 
   return gpio_port_ != MAP_FAILED && clock_reg_ != MAP_FAILED;
+}
+
+
+void GPIO::SetTxPower(CarrierPower power) {
+  switch (power) {
+  case CarrierPower::OFF:
+    EnableClockOutput(false);
+    break;
+  case CarrierPower::LOW:
+    RequestOutput(kAttenuationGPIOBit);  // Pull down.
+    ClearBits(kAttenuationGPIOBit);
+    EnableClockOutput(true);
+    break;
+  case CarrierPower::HIGH:
+    RequestInput(kAttenuationGPIOBit);   // High-Z
+    EnableClockOutput(true);
+    break;
+  }
 }

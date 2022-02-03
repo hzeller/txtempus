@@ -19,6 +19,7 @@
 #define RPI_GPIO_H
 
 #include <stdint.h>
+#include "enums.h"
 
 class GPIO {
  public:
@@ -53,6 +54,8 @@ class GPIO {
 
   // Switches the output of the currently running clock.
   void EnableClockOutput(bool b);
+
+  void SetTxPower(CarrierPower power);
 
  private:
   volatile uint32_t *gpio_port_;

@@ -35,9 +35,6 @@
 #include "gpio-rpi.h"
 #include "time-signal-source.h"
 
-// The GPIO bit that is pulled down for attenuation of the signal.
-const uint32_t kAttenuationGPIOBit = (1<<17);
-
 static bool verbose = false;
 static bool dryrun = false;
 
@@ -64,20 +61,7 @@ void StartCarrier(GPIO *gpio, int frequency) {
 
 void SetTxPower(GPIO *gpio, CarrierPower power) {
   if (dryrun) return;
-  switch (power) {
-  case CarrierPower::OFF:
-    gpio->EnableClockOutput(false);
-    break;
-  case CarrierPower::LOW:
-    gpio->RequestOutput(kAttenuationGPIOBit);  // Pull down.
-    gpio->ClearBits(kAttenuationGPIOBit);
-    gpio->EnableClockOutput(true);
-    break;
-  case CarrierPower::HIGH:
-    gpio->RequestInput(kAttenuationGPIOBit);   // High-Z
-    gpio->EnableClockOutput(true);
-    break;
-  }
+  gpio->SetTxPower(power);
 }
 
 time_t ParseLocalTime(const char *time_string) {
