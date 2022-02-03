@@ -106,6 +106,8 @@ interest.*
  sudo apt-get install git build-essential -y
  git clone https://github.com/hzeller/txtempus.git
  cd txtempus
+ mkdir build && cd build 
+ cmake ..
  make
  sudo ./txtempus -v -s DCF77
 ```
@@ -199,7 +201,6 @@ accepted if you know details).
 After building, you can install the binary in some standard location
 
 ```
- make
  sudo make install
 ```
 
