@@ -18,7 +18,7 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-#include "gpio.h"
+#include "gpio-rpi.h"
 
 #include <assert.h>
 #include <fcntl.h>

@@ -15,7 +15,7 @@ set(TIME_SOURCES
     src/jjy-source.cc 
     src/msf-source.cc)
 
-set(SRC_FILES ${TIME_SOURCES} src/txtempus.cc  src/gpio.cc)
+set(SRC_FILES ${TIME_SOURCES} src/txtempus.cc  src/gpio-rpi.cc)
 
 add_executable(txtempus ${SRC_FILES})
 target_include_directories(txtempus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

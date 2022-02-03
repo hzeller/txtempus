@@ -32,7 +32,7 @@
 
 #include <string>
 
-#include "gpio.h"
+#include "gpio-rpi.h"
 #include "time-signal-source.h"
 
 // The GPIO bit that is pulled down for attenuation of the signal.
