@@ -102,17 +102,140 @@ uint32_t GPIO::RequestInput(uint32_t inputs) {
   return inputs;
 }
 
+// We are not interested in the _exact_ model, just good enough to determine
+// What to do.
+enum RaspberryPiModel {
+  PI_MODEL_1,
+  PI_MODEL_2,
+  PI_MODEL_3,
+  PI_MODEL_4
+};
+
+static int ReadFileToBuffer(char *buffer, size_t size, const char *filename) {
+  const int fd = open(filename, O_RDONLY);
+  if (fd < 0) return -1;
+  ssize_t r = read(fd, buffer, size - 1); // assume one read enough
+  buffer[r >= 0 ? r : 0] = '\0';
+  close(fd);
+  return r;
+}
+
+static RaspberryPiModel DetermineRaspberryModel() {
+  char buffer[4096];
+  if (ReadFileToBuffer(buffer, sizeof(buffer), "/proc/cpuinfo") < 0) {
+    fprintf(stderr, "Reading cpuinfo: Could not determine Pi model\n");
+    return PI_MODEL_3;  // safe guess fallback.
+  }
+  static const char RevisionTag[] = "Revision";
+  const char *revision_key;
+  if ((revision_key = strstr(buffer, RevisionTag)) == nullptr) {
+    fprintf(stderr, "non-existent Revision: Could not determine Pi model\n");
+    return PI_MODEL_3;
+  }
+  unsigned int pi_revision;
+  if (sscanf(index(revision_key, ':') + 1, "%x", &pi_revision) != 1) {
+    fprintf(stderr, "Unknown Revision: Could not determine Pi model\n");
+    return PI_MODEL_3;
+  }
+
+  // https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
+  const unsigned pi_type = (pi_revision >> 4) & 0xff;
+  switch (pi_type) {
+  case 0x00: /* A */
+  case 0x01: /* B, Compute Module 1 */
+  case 0x02: /* A+ */
+  case 0x03: /* B+ */
+  case 0x05: /* Alpha ?*/
+  case 0x06: /* Compute Module1 */
+  case 0x09: /* Zero */
+  case 0x0c: /* Zero W */
+    return PI_MODEL_1;
+
+  case 0x04:  /* Pi 2 */
+  case 0x12:  /* Zero W 2 (behaves close to Pi 2) */
+    return PI_MODEL_2;
+
+  case 0x11: /* Pi 4 */
+    // A first test did not seem to work. Maybe the registers changed ?
+    fprintf(stderr, "Note: Frequency generation is experimental on Pi4.\n");
+    return PI_MODEL_4;
+
+  default:  /* a bunch of versions representing Pi 3 */
+    return PI_MODEL_3;
+  }
+}
+
+static RaspberryPiModel GetPiModel() {
+  static RaspberryPiModel pi_model = DetermineRaspberryModel();
+  return pi_model;
+}
+
+static uint32_t *mmap_bcm_register(off_t register_offset) {
+  off_t base = BCM2709_PERI_BASE;  // safe fallback guess.
+  switch (GetPiModel()) {
+  case PI_MODEL_1: base = BCM2708_PERI_BASE; break;
+  case PI_MODEL_2: base = BCM2709_PERI_BASE; break;
+  case PI_MODEL_3: base = BCM2709_PERI_BASE; break;
+  case PI_MODEL_4: base = BCM2711_PERI_BASE; break;
+  }
+
+  int mem_fd;
+  if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
+    perror("can't open /dev/mem: ");
+    return nullptr;
+  }
+
+  uint32_t *result =
+    (uint32_t*) mmap(nullptr,               // Any adddress in our space will do
+                     REGISTER_BLOCK_SIZE,   // Map length
+                     PROT_READ|PROT_WRITE,  // Enable r/w on GPIO registers.
+                     MAP_SHARED,
+                     mem_fd,                // File to map
+                     base + register_offset // Offset to bcm register
+                     );
+  close(mem_fd);
+
+  if (result == MAP_FAILED) {
+    perror("mmap error: ");
+    fprintf(stderr, "MMapping from base 0x%lx, offset 0x%lx\n",
+            base, register_offset);
+    return nullptr;
+  }
+  return result;
+}
+
+bool GPIO::Init() {
+  gpio_port_ = mmap_bcm_register(GPIO_REGISTER_OFFSET);
+  if (gpio_port_ == nullptr) {
+    return false;
+  }
+  gpio_set_bits_ = gpio_port_ + (0x1C / sizeof(uint32_t));
+  gpio_clr_bits_ = gpio_port_ + (0x28 / sizeof(uint32_t));
+  clock_reg_ = mmap_bcm_register(CLOCK_REGISTER_OFFSET);
+
+  return gpio_port_ != MAP_FAILED && clock_reg_ != MAP_FAILED;
+}
+
+
 // BCM2835-ARM-Peripherals.pdf, page 105 onwards.
 double GPIO::StartClock(double requested_freq) {
   // Figure out best clock source to get closest to the requested
   // frequency with MASH=1. We check starting from the highest frequency to
   // find lowest jitter opportunity first.
+  double f_pllc, f_plld, f_hdmi, f_regular;
+  switch (GetPiModel()) {
+  case PI_MODEL_1:
+  case PI_MODEL_2:
+  case PI_MODEL_3:
+  default: f_pllc = 1000.0e6; f_plld = 500.0e6; f_hdmi = 216.0e6; f_regular= 19.2e6; break;
+  case PI_MODEL_4: f_pllc = 317.0e6; f_plld = 317.0e6; f_hdmi = 216.0e6; f_regular= 54.0175e6; break;
+  }
 
   static const struct { int src; double frequency; } kClockSources[] = {
-    { 5, 1000.0e6 },   // PLLC
-    { 6,  500.0e6 },   // PLLD
-    { 7,  216.0e6 },   // HDMI  <- this can be problematic if monitor connected
-    { 1,   19.2e6 },   // regular oscillator
+    { 5,    f_pllc },   // PLLC (note on pi4 317.0e6 is the closest I can get - but output on scope is 158.43 KHz)
+    { 6,    f_plld },   // PLLD (note on pi4 317.0e6 is the closest I can get - but output on scope is 183.37 KHz)
+    { 7,    f_hdmi },   // HDMI  <- this can be problematic if monitor connected (could not find a valid value on pi4)
+    { 1, f_regular },   // regular oscillator
   };
 
   int divI = -1;
@@ -187,117 +310,3 @@ void GPIO::EnableClockOutput(bool on) {
   }
 }
 
-// We are not interested in the _exact_ model, just good enough to determine
-// What to do.
-enum RaspberryPiModel {
-  PI_MODEL_1,
-  PI_MODEL_2,
-  PI_MODEL_3,
-  PI_MODEL_4
-};
-
-static int ReadFileToBuffer(char *buffer, size_t size, const char *filename) {
-  const int fd = open(filename, O_RDONLY);
-  if (fd < 0) return -1;
-  ssize_t r = read(fd, buffer, size - 1); // assume one read enough
-  buffer[r >= 0 ? r : 0] = '\0';
-  close(fd);
-  return r;
-}
-
-static RaspberryPiModel DetermineRaspberryModel() {
-  char buffer[4096];
-  if (ReadFileToBuffer(buffer, sizeof(buffer), "/proc/cpuinfo") < 0) {
-    fprintf(stderr, "Reading cpuinfo: Could not determine Pi model\n");
-    return PI_MODEL_3;  // safe guess fallback.
-  }
-  static const char RevisionTag[] = "Revision";
-  const char *revision_key;
-  if ((revision_key = strstr(buffer, RevisionTag)) == nullptr) {
-    fprintf(stderr, "non-existent Revision: Could not determine Pi model\n");
-    return PI_MODEL_3;
-  }
-  unsigned int pi_revision;
-  if (sscanf(index(revision_key, ':') + 1, "%x", &pi_revision) != 1) {
-    fprintf(stderr, "Unknown Revision: Could not determine Pi model\n");
-    return PI_MODEL_3;
-  }
-
-  // https://www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
-  const unsigned pi_type = (pi_revision >> 4) & 0xff;
-  switch (pi_type) {
-  case 0x00: /* A */
-  case 0x01: /* B, Compute Module 1 */
-  case 0x02: /* A+ */
-  case 0x03: /* B+ */
-  case 0x05: /* Alpha ?*/
-  case 0x06: /* Compute Module1 */
-  case 0x09: /* Zero */
-  case 0x0c: /* Zero W */
-    return PI_MODEL_1;
-
-  case 0x04:  /* Pi 2 */
-  case 0x12:  /* Zero W 2 (behaves close to Pi 2) */
-    return PI_MODEL_2;
-
-  case 0x11: /* Pi 4 */
-    // A first test did not seem to work. Maybe the registers changed ?
-    fprintf(stderr, "Note: Frequency generation is known to not work on Pi4; "
-            "Use older Pis for now.\n");
-    return PI_MODEL_4;
-
-  default:  /* a bunch of versions representing Pi 3 */
-    return PI_MODEL_3;
-  }
-}
-
-static RaspberryPiModel GetPiModel() {
-  static RaspberryPiModel pi_model = DetermineRaspberryModel();
-  return pi_model;
-}
-
-static uint32_t *mmap_bcm_register(off_t register_offset) {
-  off_t base = BCM2709_PERI_BASE;  // safe fallback guess.
-  switch (GetPiModel()) {
-  case PI_MODEL_1: base = BCM2708_PERI_BASE; break;
-  case PI_MODEL_2: base = BCM2709_PERI_BASE; break;
-  case PI_MODEL_3: base = BCM2709_PERI_BASE; break;
-  case PI_MODEL_4: base = BCM2711_PERI_BASE; break;
-  }
-
-  int mem_fd;
-  if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
-    perror("can't open /dev/mem: ");
-    return nullptr;
-  }
-
-  uint32_t *result =
-    (uint32_t*) mmap(nullptr,               // Any adddress in our space will do
-                     REGISTER_BLOCK_SIZE,   // Map length
-                     PROT_READ|PROT_WRITE,  // Enable r/w on GPIO registers.
-                     MAP_SHARED,
-                     mem_fd,                // File to map
-                     base + register_offset // Offset to bcm register
-                     );
-  close(mem_fd);
-
-  if (result == MAP_FAILED) {
-    perror("mmap error: ");
-    fprintf(stderr, "MMapping from base 0x%lx, offset 0x%lx\n",
-            base, register_offset);
-    return nullptr;
-  }
-  return result;
-}
-
-bool GPIO::Init() {
-  gpio_port_ = mmap_bcm_register(GPIO_REGISTER_OFFSET);
-  if (gpio_port_ == nullptr) {
-    return false;
-  }
-  gpio_set_bits_ = gpio_port_ + (0x1C / sizeof(uint32_t));
-  gpio_clr_bits_ = gpio_port_ + (0x28 / sizeof(uint32_t));
-  clock_reg_ = mmap_bcm_register(CLOCK_REGISTER_OFFSET);
-
-  return gpio_port_ != MAP_FAILED && clock_reg_ != MAP_FAILED;
-}
