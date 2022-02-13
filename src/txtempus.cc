@@ -32,7 +32,7 @@
 
 #include <string>
 
-#include "gpio-rpi.h"
+#include "hardware-control.h"
 #include "time-signal-source.h"
 
 static bool verbose = false;
@@ -50,18 +50,18 @@ void WaitUntil(const struct timespec &ts) {
   clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
 }
 
-void StartCarrier(GPIO *gpio, int frequency) {
+void StartCarrier(HardwareControl *hw, int frequency) {
   if (dryrun) return;
-  double f = gpio->StartClock(frequency);
+  double f = hw->StartClock(frequency);
   if (verbose) {
     fprintf(stderr, "Requesting %d Hz, getting %.3f Hz carrier\n",
             frequency, f);
   }
 }
 
-void SetTxPower(GPIO *gpio, CarrierPower power) {
+void SetTxPower(HardwareControl *hw, CarrierPower power) {
   if (dryrun) return;
-  gpio->SetTxPower(power);
+  hw->SetTxPower(power);
 }
 
 time_t ParseLocalTime(const char *time_string) {
@@ -176,9 +176,9 @@ int main(int argc, char *argv[]) {
   if (!time_source)
     return usage("Please choose a service name with -s option\n", argv[0]);
 
-  GPIO gpio;
-  if (!dryrun && !gpio.Init()) {
-    fprintf(stderr, "Need to be root\n");
+  HardwareControl hw{};
+  if (!dryrun && !hw.Init()) {
+    fprintf(stderr, "Initialization failed\n");
     return 1;
   }
 
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
   sp.sched_priority = 99;
   sched_setscheduler(0, SCHED_FIFO, &sp);
 
-  StartCarrier(&gpio, time_source->GetCarrierFrequencyHz());
+  StartCarrier(&hw, time_source->GetCarrierFrequencyHz());
 
   struct timespec target_wait;
   for (time_t minute_start = now; !interrupted && ttl--; minute_start += 60) {
@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
       // Depending on the time source, there can be multiple amplitude
       // modulation changes per second.
       for (const ModulationDuration &m : modulation) {
-        SetTxPower(&gpio, m.power);
+        SetTxPower(&hw, m.power);
         if (m.duration_ms == 0) break; // last one.
         target_wait.tv_nsec += m.duration_ms * 1000000;
         WaitUntil(target_wait);
@@ -223,6 +223,6 @@ int main(int argc, char *argv[]) {
     if (verbose) fprintf(stderr, "\n");
   }
 
-  if (!dryrun) gpio.StopClock();
+  if (!dryrun) hw.StopClock();
   delete time_source;
 }

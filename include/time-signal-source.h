@@ -21,7 +21,7 @@
 #include <time.h>
 #include <stdint.h>
 #include <vector>
-#include "enums.h"
+#include "carrier-power.h"
 
 struct ModulationDuration {
   CarrierPower power;
