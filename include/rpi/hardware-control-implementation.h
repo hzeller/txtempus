@@ -15,8 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef RPI_CONTROL_H
-#define RPI_CONTROL_H
+#ifndef RPI_HARDWARE_CONTROL_IMPLEMENTATION_H
+#define RPI_HARDWARE_CONTROL_IMPLEMENTATION_H
 
 #include "hardware-control.h"
 #include <stdint.h>
@@ -51,7 +51,7 @@ class HardwareControl::Implementation {
   // not possible.
   double StartClock(double frequency_hertz);
   void StopClock();
-  
+
   // Switches the output of the currently running clock.
   void EnableClockOutput(bool b);
   void SetTxPower(CarrierPower power);
@@ -65,4 +65,4 @@ class HardwareControl::Implementation {
 
 using GPIO = HardwareControl::Implementation;
 
-#endif
+#endif // RPI_HARDWARE_CONTROL_IMPLEMENTATION_H

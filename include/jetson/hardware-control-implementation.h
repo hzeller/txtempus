@@ -16,8 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef JETSON_CONTROL_H
-#define JETSON_CONTROL_H
+#ifndef JETSON_HARDWARE_CONTROL_IMPLEMENTATION_H
+#define JETSON_HARDWARE_CONTROL_IMPLEMENTATION_H
 
 #define __STDC_FORMAT_MACROS
 
@@ -96,4 +96,4 @@ class HardwareControl::Implementation {
 };
 
 
-#endif
+#endif // JETSON_HARDWARE_CONTROL_IMPLEMENTATION_H

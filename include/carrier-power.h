@@ -15,11 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef ENUMS
-#define ENUMS
+#ifndef CARRIER_POWER_H
+#define CARRIER_POWER_H
 
 enum class CarrierPower {
   OFF, LOW, HIGH
 };
 
-#endif
+#endif // CARRIER_POWER_H
