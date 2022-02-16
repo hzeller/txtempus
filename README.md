@@ -1,4 +1,4 @@
-Radio time station transmitter using the Raspberry Pi and Nvidia Jetson 
+Radio time station transmitter using the Raspberry Pi and Nvidia Jetson
 =====================================================
 
 I am living in a country where there is no [DCF77] sender nearby for my
@@ -18,7 +18,7 @@ centimeters, but **_before running this program, make sure you follow your
 local laws with regard to restrictions on radio transmissions._**
 
 ### Platform
-txtempus supports Raspberry Pi series and Nvidia Jetson Series (experimental). 
+txtempus supports Raspberry Pi series and Nvidia Jetson Series (experimental).
 
 #### Raspberry Pi
 So far, it has been tested on a Pi3 and a
@@ -27,7 +27,7 @@ an older Pi (Bug #1), so until we have a definitive list of available
 clock sources inside these, check out that bug for a workaround.
 
 #### Nvidia Jetson Series (experimental)
-So far, it has been tested only on a Jetson Nano, 
+So far, it has been tested only on a Jetson Nano,
 but all Jetson devices except for TX1 and TX2 (there is no available pwm pin) are supported.
 
 
@@ -109,33 +109,38 @@ with allowances of radio transmissions in your area on your frequency of
 interest.*
 
 #### Nvidia Jetson Series (experimental)
-(*Please read the external hardware for Raspberry Pi above first.)   
-On Jetson, the external hardware setup is slightly different from Raspberry Pi. 
+(*Please read the external hardware for the Raspberry Pi above first.)
+On Jetson, the external hardware setup is slightly different from the Raspberry Pi.
 
-We use hardware PWM pin as a frequency output pin. Unlike the Raspberry Pi, we need only one output pin 
-because we modulate the signal by switching (on-off keying) instead of attenuating.
-And we use only one register (4.7kΩ) for the Jetson.
-It's because when we tested it on the Jetson Nano model, the voltage of the output pin was ~1.5V and the signal was too weak if I use 2x4.7kΩ registers like the Raspberry Pi.
+We need one "PWM Pin" for a frequency output, and one "Attenuation Pin" for modulating the signal.
+These pins vary by the Jetson model. Please check the following table.
 
-The output pin varies by the Jetson model. Check the following table.
-|Devices|Output pin (Board numbering)|
-|-------|----------------------------|
-|Jetson Xavier, Clara AGX Xavier|18|
-|Other devices|33|
+|Devices|PWM pin (Board numbering)|Attenuation pin (Board numbering)|
+|-------|-------------------------|---------------------------------|
+|Jetson TX1, Jetson TX2|Not supported|Not supported|
+|Jetson Xavier, Clara AGX Xavier|18|16|
+|Other devices|33|35|
 
-Here's the full schematic of the external hardware for Jetson Series:
-Schematic                      | Real world
+To operate, you need three resistors: 2x4.7kΩ and one 560Ω (precision not
+critical) and one NPN transistor (nearly any NPN transistor should work. I'm using KTC3198).
+
+Here's the full schematic of the external hardware for the Jetson Series:
+Schematic                      | Real world (Jetson Nano)
 -------------------------------|------------------------------
 ![](img/schematic-jetson.jpg)   |![](img/jetson-nano.jpg)
 
+Like the Raspberry Pi, you don't need the Attenuation Pin and the 560Ω resistor for `MSF`,
+and a wire-loop between the 4.7kΩ register and the ground acts as coupling coil. Bring this wire-loop close to your radio
+watch/clock.
 
+![](img/watch-on-wire.jpg)
 
 ### Build
 ```
  sudo apt-get install git build-essential -y
  git clone https://github.com/hzeller/txtempus.git
  cd txtempus
- mkdir build && cd build 
+ mkdir build && cd build
 ```
 
 #### Rapberry Pi
