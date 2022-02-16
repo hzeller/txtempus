@@ -30,7 +30,9 @@
 class HardwareControl::Implementation {
  private:
   int carrierPin;
+  int attenuationPin;
   bool isInitialized = false;
+  bool isOn = false;
   std::unique_ptr<GPIO::PWM> pwm;
 
  public:
@@ -48,50 +50,74 @@ class HardwareControl::Implementation {
     else if (GPIO::model == "JETSON_XAVIER" || GPIO::model == "CLARA_AGX_XAVIER") {
       // pwm pin : 15, 18
       carrierPin = 18;
+      attenuationPin = 16;
     }
     else {
       // pwm pin : 32, 33
       carrierPin = 33;
+      attenuationPin = 35;
     }
 
     GPIO::setmode(GPIO::BOARD);
     GPIO::setup(carrierPin, GPIO::OUT);
+    GPIO::setup(attenuationPin, GPIO::OUT);
 
     return true;
   }
 
 
   double StartClock(double frequency_hertz) {
-    pwm = std::unique_ptr<GPIO::PWM>(new GPIO::PWM(carrierPin, frequency_hertz));
+    if (pwm == nullptr)
+      pwm = std::unique_ptr<GPIO::PWM>(new GPIO::PWM(carrierPin, frequency_hertz));
+
     pwm->start(50.0); // duty cycle: 50%
+    isOn = true;
 
     return frequency_hertz;
   }
 
   void StopClock() {
-    if (pwm)
+    if (pwm) {
       pwm->stop();
+      isOn = false;
+    }
   }
 
   void EnableClockOutput(bool on) {
-    if (on)
+    if(on == isOn)
+      return;
+
+    if (on) {
       pwm->start(50.0);
-    else
-      pwm->stop();
+      isOn = true;
+    }
+    else {
+      StopClock();
+    }
   }
 
   void SetTxPower(CarrierPower power) {
     switch (power) {
-    
-    // simply on / off the pwm
     case CarrierPower::LOW:
+      EnableClockOutput(true);
+      ApplyAttenuation();
+      break;
     case CarrierPower::OFF:
       EnableClockOutput(false);
       break;
     case CarrierPower::HIGH:
       EnableClockOutput(true);
+      StopAttenuation();
       break;
     }
+  }
+
+  void ApplyAttenuation() {
+    GPIO::output(attenuationPin, GPIO::HIGH);
+  }
+
+  void StopAttenuation() {
+    GPIO::output(attenuationPin, GPIO::LOW);
   }
 };
 
