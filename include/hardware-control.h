@@ -1,6 +1,7 @@
 // -*- mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; -*-
 // Part of txtempus, a LF time signal transmitter.
 // Copyright (C) 2013 Henner Zeller <h.zeller@acm.org>
+// Copyright (C) 2022 Jueon Park <bluegbgb@gmail.com>
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,37 +16,32 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef RPI_GPIO_H
-#define RPI_GPIO_H
+#ifndef HARDWARE_CONTROL_H
+#define HARDWARE_CONTROL_H
 
-#include <stdint.h>
+#include <memory>
+#include "carrier-power.h"
 
-class GPIO {
+class HardwareControl {
  public:
-  // Available bits that actually have pins.
-  static const uint32_t kValidBits;
-
-  GPIO();
+  // To add a new platform support: 
+  // 1. Add include/[new_platform_name]/hardware-control-implementation.h file and
+  //    implement "HardwareControl::Implementation" class for the platform.
+  // 2. Add cmake/[new_platform_name]-control.cmake file and set platform-specific configuration:
+  //    SRC_FILES: source files
+  //    INCLUDE_DIRS: include directories
+  //    PLATFORM_DEPENDENCIES: dependencies 
+  // 3. Append [new_platform_name] to "SUPPORTED_PLATFORMS" in CMakeLists.txt.
+  class Implementation;
+  
+  HardwareControl();
+  ~HardwareControl();
 
   // Initialize before use. Returns 'true' if successful, 'false' otherwise
   // (e.g. due to a permission problem).
   bool Init();
 
-  // Initialize outputs for given bits.
-  // Returns the bits that are physically available and could be set for output.
-  uint32_t RequestOutput(uint32_t outputs);
-
-  // Request given bits for input.
-  // Returns the bits that available and could be reserved.
-  uint32_t RequestInput(uint32_t inputs);
-
-  // Set the bits that are '1' in the output. Leave the rest untouched.
-  inline void SetBits(uint32_t value) { *gpio_set_bits_ = value; }
-
-  // Clear the bits that are '1' in the output. Leave the rest untouched.
-  inline void ClearBits(uint32_t value) { *gpio_clr_bits_ = value; }
-
-  // Set frequency output on GPIO4 as close as possible to the requested one.
+  // Set frequency output as close as possible to the requested one.
   // Returns the approximate frequency it could configure or -1 if that was
   // not possible.
   double StartClock(double frequency_hertz);
@@ -54,11 +50,11 @@ class GPIO {
   // Switches the output of the currently running clock.
   void EnableClockOutput(bool b);
 
+  void SetTxPower(CarrierPower power);
+
  private:
-  volatile uint32_t *gpio_port_;
-  volatile uint32_t *gpio_set_bits_;
-  volatile uint32_t *gpio_clr_bits_;
-  volatile uint32_t *clock_reg_;
+  // pimpl idiom to hide platform-specific information
+  std::unique_ptr<Implementation> pimpl;
 };
 
-#endif  // RPI_GPIO_H
+#endif  // HARDWARE_CONTROL_H

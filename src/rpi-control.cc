@@ -18,7 +18,8 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-#include "gpio.h"
+#include "hardware-control.h"
+#include "hardware-control-implementation.h"
 
 #include <assert.h>
 #include <fcntl.h>
@@ -29,6 +30,8 @@
 #include <sys/mman.h>
 #include <time.h>
 #include <unistd.h>
+
+// -- Implementation for Raspberry Pi Series --
 
 // Raspberry 1 and 2 have different base addresses for the periphery
 #define BCM2708_PERI_BASE        0x20000000
@@ -66,6 +69,8 @@
 #define CLK_CMGP2_CTL 32
 #define CLK_CMGP2_DIV 33
 
+/*static*/const uint32_t GPIO::kAttenuationGPIOBit = (1<<17);
+
 /*static*/ const uint32_t GPIO::kValidBits
 = ((1 <<  0) | (1 <<  1) | // RPi 1 - Revision 1 accessible
    (1 <<  2) | (1 <<  3) | // RPi 1 - Revision 2 accessible
@@ -76,8 +81,6 @@
    (1 <<  5) | (1 <<  6) | (1 << 12) | (1 << 13) | (1 << 16) |
    (1 << 19) | (1 << 20) | (1 << 21) | (1 << 26)
 );
-
-GPIO::GPIO() : gpio_port_(nullptr) {}
 
 uint32_t GPIO::RequestOutput(uint32_t outputs) {
   assert(gpio_port_);  // Call Init() first.
@@ -293,6 +296,7 @@ static uint32_t *mmap_bcm_register(off_t register_offset) {
 bool GPIO::Init() {
   gpio_port_ = mmap_bcm_register(GPIO_REGISTER_OFFSET);
   if (gpio_port_ == nullptr) {
+    fprintf(stderr, "Need to be root\n");
     return false;
   }
   gpio_set_bits_ = gpio_port_ + (0x1C / sizeof(uint32_t));
@@ -300,4 +304,22 @@ bool GPIO::Init() {
   clock_reg_ = mmap_bcm_register(CLOCK_REGISTER_OFFSET);
 
   return gpio_port_ != MAP_FAILED && clock_reg_ != MAP_FAILED;
+}
+
+
+void GPIO::SetTxPower(CarrierPower power) {
+  switch (power) {
+  case CarrierPower::OFF:
+    EnableClockOutput(false);
+    break;
+  case CarrierPower::LOW:
+    RequestOutput(kAttenuationGPIOBit);  // Pull down.
+    ClearBits(kAttenuationGPIOBit);
+    EnableClockOutput(true);
+    break;
+  case CarrierPower::HIGH:
+    RequestInput(kAttenuationGPIOBit);   // High-Z
+    EnableClockOutput(true);
+    break;
+  }
 }

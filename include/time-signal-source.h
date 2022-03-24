@@ -21,10 +21,8 @@
 #include <time.h>
 #include <stdint.h>
 #include <vector>
+#include "carrier-power.h"
 
-enum class CarrierPower {
-  OFF, LOW, HIGH
-};
 struct ModulationDuration {
   CarrierPower power;
   int duration_ms;

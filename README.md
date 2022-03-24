@@ -1,4 +1,4 @@
-Radio time station transmitter using the Raspberry Pi
+Radio time station transmitter using the Raspberry Pi and Nvidia Jetson
 =====================================================
 
 I am living in a country where there is no [DCF77] sender nearby for my
@@ -18,10 +18,18 @@ centimeters, but **_before running this program, make sure you follow your
 local laws with regard to restrictions on radio transmissions._**
 
 ### Platform
-This runs on a Raspberry Pi. So far, it has been tested on a Pi3 and a
+txtempus supports Raspberry Pi series and Nvidia Jetson Series (experimental).
+
+#### Raspberry Pi
+So far, it has been tested on a Pi3 and a
 Pi Zero W. There has been a report of different frequencies generated with
 an older Pi (Bug #1), so until we have a definitive list of available
 clock sources inside these, check out that bug for a workaround.
+
+#### Nvidia Jetson Series (experimental)
+So far, it has been tested only on a Jetson Nano,
+but all Jetson devices except for TX1 and TX2 (there is no available pwm pin) are supported.
+
 
 ### Supported Time Services
 #### DCF77
@@ -54,7 +62,7 @@ If you're in/or want to display a different time-zone, issue
 you.
 
 ### Minimal External Hardware
-
+#### Raspberry Pi
 The external hardware is simple: we use the frequency output on one pin and
 another pin to pull the signal to a lower level for the regular attenuation.
 
@@ -100,13 +108,60 @@ adding an amplifier. *Only go in this direction after familiarizing yourself
 with allowances of radio transmissions in your area on your frequency of
 interest.*
 
-### Transmit!
+#### Nvidia Jetson Series (experimental)
+(*Please read the external hardware for the Raspberry Pi above first.)
+On Jetson, the external hardware setup is slightly different from the Raspberry Pi.
 
+We need one "PWM Pin" for a frequency output, and one "Attenuation Pin" for modulating the signal.
+These pins vary by the Jetson model. Please check the following table.
+
+|Devices|PWM pin (Board numbering)|Attenuation pin (Board numbering)|
+|-------|-------------------------|---------------------------------|
+|Jetson TX1, Jetson TX2|Not supported|Not supported|
+|Jetson Xavier, Clara AGX Xavier|18|16|
+|Other devices|33|35|
+
+To operate, you need three resistors: 2x4.7kΩ and one 560Ω (precision not
+critical) and one NPN transistor (nearly any NPN transistor should work. I'm using KTC3198).
+
+Here's the full schematic of the external hardware for the Jetson Series:
+Schematic                      | Real world (Jetson Nano)
+-------------------------------|------------------------------
+![](img/schematic-jetson.jpg)   |![](img/jetson-nano.jpg)
+
+Like the Raspberry Pi, you don't need the Attenuation Pin and the 560Ω resistor for `MSF`,
+and a wire-loop between the 4.7kΩ register and the ground acts as coupling coil. Bring this wire-loop close to your radio
+watch/clock.
+
+![](img/watch-on-wire.jpg)
+
+### Build
 ```
  sudo apt-get install git build-essential -y
  git clone https://github.com/hzeller/txtempus.git
  cd txtempus
+ mkdir build && cd build
+```
+
+#### Rapberry Pi
+```
+ cmake .. # or cmake .. -DPLATFORM=rpi
  make
+```
+
+#### Nvidia Jetson Series (experimental)
+Before you build txtempus on your Jetson:
+- You should install [JetsonGPIO](https://github.com/pjueon/JetsonGPIO) which is a library that enables the use of Jetson's GPIOs.
+- The system pinmux must be configured to connect the hardware PWM controlller(s) to the relevant pins. Read the L4T documentation for details on how to configure the pinmux.
+
+```
+ cmake .. -DPLATFORM=jetson
+ make
+```
+
+### Transmit!
+
+```
  sudo ./txtempus -v -s DCF77
 ```
 
@@ -130,7 +185,7 @@ Options:
         -h                    : This help.
 ```
 
-#### Don't connect monitor
+#### Don't connect monitor (Raspberry Pi)
 
 Don't connect a monitor to the Pi, just operate it headless.
 
@@ -199,7 +254,6 @@ accepted if you know details).
 After building, you can install the binary in some standard location
 
 ```
- make
  sudo make install
 ```
 
