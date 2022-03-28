@@ -137,7 +137,7 @@ watch/clock.
 
 ### Build
 ```
- sudo apt-get install git build-essential -y
+ sudo apt-get install git build-essential cmake -y
  git clone https://github.com/hzeller/txtempus.git
  cd txtempus
  mkdir build && cd build
@@ -145,7 +145,7 @@ watch/clock.
 
 #### Rapberry Pi
 ```
- cmake .. # or cmake .. -DPLATFORM=rpi
+ cmake ../ # or cmake ../ -DPLATFORM=rpi
  make
 ```
 
@@ -155,7 +155,7 @@ Before you build txtempus on your Jetson:
 - The system pinmux must be configured to connect the hardware PWM controlller(s) to the relevant pins. Read the L4T documentation for details on how to configure the pinmux.
 
 ```
- cmake .. -DPLATFORM=jetson
+ cmake ../ -DPLATFORM=jetson
  make
 ```
 
