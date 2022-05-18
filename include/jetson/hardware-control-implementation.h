@@ -41,13 +41,14 @@ class HardwareControl::Implementation {
       return carrierPin > 0;
 
     isInitialized = true;
+    auto model = GPIO::model();
 
-    if (GPIO::model == "JETSON_TX1" || GPIO::model == "JETSON_TX2") {
+    if (model == "JETSON_TX1" || model == "JETSON_TX2") {
       // cannot control pwm through JetsonGPIO library
-      std::cerr << "Your model(" << GPIO::model << ") is not supported." << std::endl;
+      std::cerr << "Your model(" << model << ") is not supported." << std::endl;
       return false;
     }
-    else if (GPIO::model == "JETSON_XAVIER" || GPIO::model == "CLARA_AGX_XAVIER") {
+    else if (model == "JETSON_XAVIER" || model == "CLARA_AGX_XAVIER") {
       // pwm pin : 15, 18
       carrierPin = 18;
       attenuationPin = 16;
