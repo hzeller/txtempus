@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include <string>
+#include <memory>
 
 #include "hardware-control.h"
 #include "time-signal-source.h"
@@ -99,17 +100,17 @@ void PrintModulationChart(const TimeSignalSource::SecondModulation &mod) {
   fprintf(stderr, "]\n");
 }
 
-TimeSignalSource *CreateTimeSourceFromName(const char *n) {
+std::unique_ptr<TimeSignalSource> CreateTimeSourceFromName(const char *n) {
   if (strcasecmp(n, "DCF77") == 0)
-    return new DCF77TimeSignalSource();
+    return std::unique_ptr<TimeSignalSource>{new DCF77TimeSignalSource()};
   if (strcasecmp(n, "WWVB") == 0)
-    return new WWVBTimeSignalSource();
+    return std::unique_ptr<TimeSignalSource>{new WWVBTimeSignalSource()};
   if (strcasecmp(n, "JJY40") == 0)
-    return new JJY40TimeSignalSource();
+    return std::unique_ptr<TimeSignalSource>{new JJY40TimeSignalSource()};
   if (strcasecmp(n, "JJY60") == 0)
-    return new JJY60TimeSignalSource();
+    return std::unique_ptr<TimeSignalSource>{new JJY60TimeSignalSource()};
   if (strcasecmp(n, "MSF") == 0)
-    return new MSFTimeSignalSource();
+    return std::unique_ptr<TimeSignalSource>{new MSFTimeSignalSource()};
   return nullptr;
 }
 
@@ -172,7 +173,7 @@ int main(int argc, char *argv[]) {
   chosen_time += zone_offset * 60;
   const int time_offset = chosen_time - now;
 
-  TimeSignalSource *time_source = CreateTimeSourceFromName(service);
+  auto time_source = CreateTimeSourceFromName(service);
   if (!time_source)
     return usage("Please choose a service name with -s option\n", argv[0]);
 
@@ -224,5 +225,4 @@ int main(int argc, char *argv[]) {
   }
 
   if (!dryrun) hw.StopClock();
-  delete time_source;
 }
