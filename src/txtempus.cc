@@ -35,6 +35,7 @@
 
 #include "hardware-control.h"
 #include "time-signal-source.h"
+#include "user-input.h"
 
 static bool verbose = false;
 static bool dryrun = false;
@@ -137,42 +138,23 @@ int usage(const char *msg, const char *progname) {
 
 int main(int argc, char *argv[]) {
   const time_t now = TruncateTo(time(NULL), 60);  // Time signals: full minute
-  std::unique_ptr<TimeSignalSource> time_source{};
-  time_t chosen_time = now;
-  int zone_offset = 0;
-  int ttl = INT_MAX;
-  int opt;
-  while ((opt = getopt(argc, argv, "t:z:r:vs:hn")) != -1) {
-    switch (opt) {
-    case 'v':
-      verbose = true;
-      break;
-    case 't':
-      chosen_time = ParseLocalTime(optarg);
-      if (chosen_time <= 0) return usage("Invalid time string\n", argv[0]);
-      break;
-    case 'z':
-      zone_offset = atoi(optarg);
-      break;
-    case 'r':
-      ttl = atoi(optarg);
-      break;
-    case 's':
-      time_source = CreateTimeSourceFromName(optarg);
-      break;
-    case 'n':
-      dryrun = true;
-      verbose = true;
-      ttl = 1;
-      break;
-    default:
-      return usage("", argv[0]);
-    }
-  }
+  UserInput input(argc, argv);
 
-  chosen_time += zone_offset * 60;
+  time_t chosen_time = now;
+  if(input.chosen_time != "")
+    chosen_time = ParseLocalTime(input.chosen_time.c_str());
+
+  verbose = input.verbose;
+  dryrun = input.dryrun;
+
+  if (chosen_time <= 0) return usage("Invalid time string\n", argv[0]);
+
+  if (input.show_help) return usage("", argv[0]);
+
+  chosen_time += input.zone_offset * 60;
   const int time_offset = chosen_time - now;
 
+  auto time_source = CreateTimeSourceFromName(input.service.c_str());
   if (!time_source)
     return usage("Please choose a service name with -s option\n", argv[0]);
 
@@ -192,6 +174,7 @@ int main(int argc, char *argv[]) {
 
   StartCarrier(&hw, time_source->GetCarrierFrequencyHz());
 
+  int ttl = input.ttl;
   struct timespec target_wait;
   for (time_t minute_start = now; !interrupted && ttl--; minute_start += 60) {
     const time_t transmit_time = minute_start + time_offset;
