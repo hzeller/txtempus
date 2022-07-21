@@ -102,15 +102,15 @@ void PrintModulationChart(const TimeSignalSource::SecondModulation &mod) {
 
 std::unique_ptr<TimeSignalSource> CreateTimeSourceFromName(const char *n) {
   if (strcasecmp(n, "DCF77") == 0)
-    return std::unique_ptr<TimeSignalSource>{new DCF77TimeSignalSource()};
+    return std::make_unique<DCF77TimeSignalSource>();
   if (strcasecmp(n, "WWVB") == 0)
-    return std::unique_ptr<TimeSignalSource>{new WWVBTimeSignalSource()};
+    return std::make_unique<WWVBTimeSignalSource>();
   if (strcasecmp(n, "JJY40") == 0)
-    return std::unique_ptr<TimeSignalSource>{new JJY40TimeSignalSource()};
+    return std::make_unique<JJY40TimeSignalSource>();
   if (strcasecmp(n, "JJY60") == 0)
-    return std::unique_ptr<TimeSignalSource>{new JJY60TimeSignalSource()};
+    return std::make_unique<JJY60TimeSignalSource>();
   if (strcasecmp(n, "MSF") == 0)
-    return std::unique_ptr<TimeSignalSource>{new MSFTimeSignalSource()};
+    return std::make_unique<MSFTimeSignalSource>();
   return nullptr;
 }
 
