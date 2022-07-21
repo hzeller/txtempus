@@ -4,16 +4,16 @@ PROJECT(txtempus
         LANGUAGES C CXX)
 
 include(GNUInstallDirs)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 ADD_DEFINITIONS(-Wall -O3)
 
 set(CMAKE_INSTALL_PREFIX /usr)
 
 set(SRC_FILES 
     src/txtempus.cc
-    src/dcf77-source.cc 
-    src/wwvb-source.cc 
-    src/jjy-source.cc 
+    src/dcf77-source.cc
+    src/wwvb-source.cc
+    src/jjy-source.cc
     src/msf-source.cc
     src/hardware-control.cc)
 
@@ -21,13 +21,13 @@ set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 set(PLATFORM_DEPENDENCIES "")
 
 # select the platform
-set(SUPPORTED_PLATFORMS rpi jetson) 
+set(SUPPORTED_PLATFORMS rpi jetson)
 set(PLATFORM "rpi" CACHE STRING "Platform")
 
 if(NOT ${PLATFORM} IN_LIST SUPPORTED_PLATFORMS)
     string(REPLACE ";"  ", " SUPPORTED_PLATFORM_LIST "${SUPPORTED_PLATFORMS}")
     message(FATAL_ERROR "'${PLATFORM}' is not a supported platform.\nSupported platforms: [${SUPPORTED_PLATFORM_LIST}]")
-endif() 
+endif()
 
 message(STATUS "Platform: ${PLATFORM}")
 
