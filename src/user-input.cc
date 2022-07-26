@@ -30,15 +30,33 @@ UserInput::UserInput(int argc, char *argv[])
       ttl(INT_MAX),
       verbose(false),
       dryrun(false),
-      show_help(false) {
+      show_help(false),
+      show_version(false) {
     Parse(argc, argv);
 }
 
 
 void UserInput::Parse(int argc, char *argv[]) {
+  int option_flag = 0;
+  struct option long_options[] =
+  {
+      {"version", no_argument, &option_flag, 1},
+      {nullptr, 0, nullptr, 0}
+  };
+
+  constexpr auto short_options = "t:z:r:vs:hn";
+
+  int option_index = 0;
   int opt{};
-  while ((opt = getopt(argc, argv, "t:z:r:vs:hn")) != -1) {
+
+  while ((opt = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1) {
     switch (opt) {
+    case 0:   // long options
+      if (option_flag == 1)
+        show_version = true;
+      break;
+
+    // short options
     case 'v':
       verbose = true;
       break;

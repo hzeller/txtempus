@@ -19,7 +19,6 @@
 // as DCF77, WWVB, ... to be run on the Raspberry Pi.
 // Make sure to stay within the regulation limits of HF transmissions!
 
-#include <getopt.h>
 #include <limits.h>
 #include <sched.h>
 #include <signal.h>
@@ -29,6 +28,7 @@
 #include <time.h>
 #include <strings.h>
 #include <string.h>
+#include <iostream>
 
 #include <string>
 #include <memory>
@@ -129,9 +129,15 @@ int usage(const char *msg, const char *progname) {
           "\t-v                    : Verbose.\n"
           "\t-n                    : Dryrun, only showing modulation "
           "envelope.\n"
-          "\t-h                    : This help.\n",
+          "\t-h                    : This help \n"
+          "\t--version             : Show version info.\n",
           msg, progname);
   return 1;
+}
+
+void ShowVersionInfo()
+{
+  std::cout << "txtempus 1.0.0.0" << std::endl;
 }
 
 }  // end anonymous namespace
@@ -139,6 +145,12 @@ int usage(const char *msg, const char *progname) {
 int main(int argc, char *argv[]) {
   const time_t now = TruncateTo(time(NULL), 60);  // Time signals: full minute
   UserInput input(argc, argv);
+
+  if(input.show_version)
+  {
+    ShowVersionInfo();
+    return 0;
+  }
 
   time_t chosen_time = now;
   if(input.chosen_time != "")

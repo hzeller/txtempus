@@ -31,6 +31,7 @@ public:
   bool verbose = false;
   bool dryrun = false;
   bool show_help = false;
+  bool show_version = false;
 
 private:
   void Parse(int argc, char *argv[]);
