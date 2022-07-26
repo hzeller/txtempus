@@ -36,6 +36,7 @@
 #include "hardware-control.h"
 #include "time-signal-source.h"
 #include "user-input.h"
+#include "version.h"
 
 static bool verbose = false;
 static bool dryrun = false;
@@ -137,7 +138,7 @@ int usage(const char *msg, const char *progname) {
 
 void ShowVersionInfo()
 {
-  std::cout << "txtempus 1.0.0.0" << std::endl;
+  std::cout << VERSION << std::endl;
 }
 
 }  // end anonymous namespace
