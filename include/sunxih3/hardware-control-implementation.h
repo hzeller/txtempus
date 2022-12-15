@@ -42,6 +42,12 @@ class HardwareControl::Implementation {
   // Switches the output of the currently running clock.
   void EnableClockOutput(bool enable);
 
+  // PA6 and PA5 are used
+  enum gpio_pin {
+      PA5,
+      PA6
+      };
+
   // Sets the power of the output by pulling low the voltage divider's mid point
   void SetTxPower(CarrierPower power);
 
@@ -53,11 +59,6 @@ class HardwareControl::Implementation {
   // PWM clock presaclers
   std::map<int, int>PwmCh0Prescale;
 
-  // PA6 and PA5 are used
-  enum gpio_pin {
-      PA5,
-      PA6
-      };
 
   struct pwm_params {
       int period;

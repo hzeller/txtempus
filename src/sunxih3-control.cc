@@ -110,7 +110,7 @@ bool H3BOARD::Init() {
 // Disable pullups on PA5 and PA6
 // Disabled is the default but let's make sure
 void H3BOARD::DisablePaPulls(void) {
-  int shift, mask, value;
+  int mask, value;
   assert(pioreg);  // Call Init() first.
 
   mask = P_PULL_MASK << PA6_PULL_SHIFT | P_PULL_MASK << PA5_PULL_SHIFT;
@@ -167,16 +167,16 @@ H3BOARD::pwm_params H3BOARD::CalculatePWMParams(double requested_freq) {
   unsigned error = 1e9;
   unsigned clk_freq, effective_freq, cycles;
 
- // for (const auto& kx: PwmCh0Prescale) {
-    clk_freq = (unsigned int) PWM_BASE_FREQUENCY / 1 // kx.first;
+  for (const auto& kx: PwmCh0Prescale) {
+    clk_freq = (unsigned int) PWM_BASE_FREQUENCY /  kx.first;
     cycles = (clk_freq / requested_freq) - 1;
     effective_freq = (unsigned int) clk_freq / (cycles + 1);
     if (error > fabs(requested_freq - effective_freq) && cycles > 0 && cycles < 65536) {
-      params.prescale = 1 // kx.first;
+      params.prescale =  kx.first;
       params.period = cycles;
       params.frequency = effective_freq;
     }
-  //}
+  }
   return params;
 }
 
@@ -248,11 +248,11 @@ void H3BOARD::SetTxPower(CarrierPower power) {
     EnableClockOutput(false);
     break;
   case CarrierPower::LOW:
-    SetOutput(P6);
+    SetOutput(PA6);
     EnableClockOutput(true);
     break;
   case CarrierPower::HIGH:
-    SetInput(P6);   // High-Z
+    SetInput(PA6);   // High-Z
     EnableClockOutput(true);
     break;
   }
