@@ -20,6 +20,7 @@
 
 #include "hardware-control.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <map>
 
 
@@ -39,7 +40,7 @@ class HardwareControl::Implementation {
   void StopClock();
 
   // Switches the output of the currently running clock.
-  void EnableClockOutput(bool b);
+  void EnableClockOutput(bool enable);
 
   // Sets the power of the output by pulling low the voltage divider's mid point
   void SetTxPower(CarrierPower power);
