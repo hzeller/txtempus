@@ -42,24 +42,30 @@ class HardwareControl::Implementation {
   // Switches the output of the currently running clock.
   void EnableClockOutput(bool enable);
 
-  // PA6 and PA5 are used
-  enum gpio_pin {
-      PA5,
-      PA6
-      };
-
   // Sets the power of the output by pulling low the voltage divider's mid point
   void SetTxPower(CarrierPower power);
 
  private:
-  // PWM control register offsets 
-  std::map<std::string, int>PwmCtrlRegMap;
+enum TPwmCtrlReg { 
+    PWM0_RDY = 28, 
+    PWM0_BYPASS =  9, 
+    PWM_CH0_PUL_START = 8,
+    PWM_CHANNEL0_MODE = 7,
+    SCLK_CH0_GATING = 6,
+    PWM_CH0_ACT_STA = 5,
+    PWM_CH0_EN = 4,
+    PWM_CH0_PRESCAL = 0 };
+
   // PWM period register offsets
   std::map<std::string, int>PwmCh0PeriodMap;
   // PWM clock presaclers
   std::map<int, int>PwmCh0Prescale;
 
-
+  // PA6 and PA5 are used
+  enum gpio_pin {
+      PA5,
+      PA6
+      };
   struct pwm_params {
       int period;
       int prescale;
@@ -69,6 +75,7 @@ class HardwareControl::Implementation {
   // Registers of the board
   volatile uint32_t *pwmreg = nullptr;
   volatile uint32_t *pioreg = nullptr;
+  
   uint32_t *map_register(off_t register_offset);
 
   // Setup pin as output or LOW-Z input
