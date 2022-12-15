@@ -58,7 +58,7 @@
 #define PA5_PULL_SHIFT 10 // Bits [2i+1:2i] (i=0~15)
 
 // Amount of memory to map after registers to access all offsets
-#define REGISTER_BLOCK_SIZE 512
+#define REGISTER_BLOCK_SIZE (4*1024)
 
 // PWM Base frequency - 24MHz
 #define PWM_BASE_FREQUENCY 24e6
