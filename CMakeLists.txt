@@ -21,7 +21,7 @@ set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 set(PLATFORM_DEPENDENCIES "")
 
 # select the platform
-set(SUPPORTED_PLATFORMS rpi jetson)
+set(SUPPORTED_PLATFORMS rpi jetson sunxih3)
 set(PLATFORM "rpi" CACHE STRING "Platform")
 
 if(NOT ${PLATFORM} IN_LIST SUPPORTED_PLATFORMS)
