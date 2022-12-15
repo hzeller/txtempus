@@ -75,10 +75,7 @@ class HardwareControl::Implementation {
   void SetInput(gpio_pin pin);
 
   // Configure pins
-  void EnableClockOutput(bool enable);
   void DisablePaPulls(void);
-
-
 
   // Calculate PWM parameters based on requested output frequency
   pwm_params CalculatePWMParams(double requested_freq);
