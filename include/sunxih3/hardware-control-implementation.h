@@ -46,7 +46,7 @@ class HardwareControl::Implementation {
   void SetTxPower(CarrierPower power);
 
  private:
-enum TPwmCtrlReg { 
+  enum TPwmCtrlReg { 
     PWM0_RDY = 28, 
     PWM0_BYPASS =  9, 
     PWM_CH0_PUL_START = 8,
@@ -56,8 +56,10 @@ enum TPwmCtrlReg {
     PWM_CH0_EN = 4,
     PWM_CH0_PRESCAL = 0 };
 
-  // PWM period register offsets
-  std::map<std::string, int>PwmCh0PeriodMap;
+  enum TPwmCh0Period {
+    PWM_CH0_ENTIRE_CYS = 16, 
+    PWM_CH0_ENTIRE_ACT_CYS = 0 };
+
   // PWM clock presaclers
   std::map<int, int>PwmCh0Prescale;
 

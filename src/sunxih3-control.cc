@@ -67,20 +67,6 @@
 #define PWM_DEFAULT_OFF 0x0
 
 bool H3BOARD::Init() {
-// PWM control offsets
-  PwmCtrlRegMap = {
-    {"PWM0_RDY", 28}, 
-    {"PWM0_BYPASS", 9}, 
-    {"PWM_CH0_PUL_START", 8},
-    {"PWM_CHANNEL0_MODE", 7},
-    {"SCLK_CH0_GATING.", 6},
-    {"PWM_CH0_ACT_STA.", 5},
-    {"PWM_CH0_EN.", 4},
-    {"PWM_CH0_PRESCAL", 0}};
-// PWM period offsets
-  PwmCh0PeriodMap = {
-    {"PWM_CH0_ENTIRE_CYS", 16}, 
-    {"PWM_CH0_ENTIRE_ACT_CYS", 0}};
 // PWM presacaling values
   PwmCh0Prescale = {
     {120, 0b0000}, 
@@ -191,15 +177,15 @@ double H3BOARD::StartClock(double requested_freq) {
 
   StopClock();
   // Setup PWM period tpo 50% duty cycle
-  pwm_period = params.period << PwmCh0PeriodMap["PWM_CH0_ENTIRE_CYS"] |
-               (params.period / 2) << PwmCh0PeriodMap["PWM_CH0_ENTIRE_ACT_CYS"];
+  pwm_period = params.period << PWM_CH0_ENTIRE_CYS |
+               (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
   pwmreg[PWM_CH0_PERIOD] = pwm_period;
 
   // Setup PWM control register
   WaitPwmBusy();
-  pwm_control =  0b1 << PwmCtrlRegMap["PWM_CH0_PUL_START"] | 
-                  0b1 << PwmCtrlRegMap["PWM_CH0_EN"] |
-                  PwmCh0Prescale[params.prescale] << PwmCtrlRegMap["PWM_CH0_PRESCAL"];
+  pwm_control =  0b1 << PWM_CH0_PUL_START | 
+                  0b1 << PWM_CH0_EN |
+                  PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
   pwmreg[PWM_CH_CTRL] = pwm_control;
 
   EnableClockOutput(true);
@@ -260,7 +246,7 @@ void H3BOARD::SetTxPower(CarrierPower power) {
 
 // Wait until PWM register is not busy
 void H3BOARD::WaitPwmBusy() {
-  while (pwmreg[PWM_CH_CTRL] & (0b1 << PwmCtrlRegMap["PWM0_RDY"])) {
+  while (pwmreg[PWM_CH_CTRL] & (0b1 << PWM0_RDY)) {
     usleep(5);
   }
 }
