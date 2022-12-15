@@ -167,7 +167,7 @@ H3BOARD::pwm_params H3BOARD::CalculatePWMParams(double requested_freq) {
   unsigned error = 1e9;
   unsigned clk_freq, effective_freq, cycles;
 
-  for (const auto& kx: PwmCh0Prescale) {
+ // for (const auto& kx: PwmCh0Prescale) {
     clk_freq = (unsigned int) PWM_BASE_FREQUENCY / 1 // kx.first;
     cycles = (clk_freq / requested_freq) - 1;
     effective_freq = (unsigned int) clk_freq / (cycles + 1);
@@ -176,7 +176,7 @@ H3BOARD::pwm_params H3BOARD::CalculatePWMParams(double requested_freq) {
       params.period = cycles;
       params.frequency = effective_freq;
     }
-  }
+  //}
   return params;
 }
 
