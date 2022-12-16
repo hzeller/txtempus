@@ -201,8 +201,7 @@ double H3BOARD::StartClock(double requested_freq) {
   if(debug) cout << "Period written done\n";
 
   // Setup PWM control register
-  pwm_control =  0b1 << PWM_CH0_PUL_START | 
-                  0b1 << PWM_CH0_EN |
+  pwm_control =   0b1 << PWM_CH0_EN |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
   registers[PWM_CH_CTRL] = pwm_control;
 
