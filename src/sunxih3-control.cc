@@ -196,14 +196,14 @@ double H3BOARD::StartClock(double requested_freq) {
   // Get PWM parameters for the requested frequency 
   params =  CalculatePWMParams(requested_freq);
   assert(params.prescale != -1);
-  if(debug) cout << "Calcfreq done\n";
+  if(debug) cout << "Frequency calculations done\n";
 
   // Start Gating clock
   pwm_control =   0b1 << SCLK_CH0_GATING |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
   registers[PWM_CTRL_REG] = pwm_control;
 
-  WaitPwmPeriodBusy();
+  WaitPwmPeriodReady();
 
   // Setup PWM period to 50% duty cycle
   if(debug) fprintf(stderr,"Presacale: %d  Period: %d\n",params.prescale,params.period);
@@ -211,19 +211,9 @@ double H3BOARD::StartClock(double requested_freq) {
                (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
   registers[PWM_CH0_PERIOD] = pwm_period;
 
-  WaitPwmPeriodBusy();
-
-//  pwm_control =   0b1 << PWM_CH0_ACT_STA;
- // registers[PWM_CTRL_REG] |= pwm_control;
-
- // usleep(50);
-//  registers[PWM_CTRL_REG] &= ~pwm_control;
-
   usleep(50);
   EnableClockOutput(true);
-  if(debug) cout << "Output enabled done\n";
-
-  if(debug) fprintf(stderr,"Read from PWM Control reg: %x\n",registers[PWM_CTRL_REG]);
+  if(debug) cout << "Output enabled\n";
 
   return params.frequency;
 }
@@ -232,7 +222,6 @@ void H3BOARD::StopClock() {
   uint32_t pwm_control_mask;
   
   pwm_control_mask = 0b1 << PWM_CH0_EN;
-
   registers[PWM_CTRL_REG] &= ~pwm_control_mask;
 
   usleep (100);
@@ -240,11 +229,10 @@ void H3BOARD::StopClock() {
   pwm_control_mask = 0b1 << SCLK_CH0_GATING;
   registers[PWM_CTRL_REG] &= ~pwm_control_mask;
 
-  if(debug) cout << "Stop Clock done\n";
+  if(debug) cout << "Clock stopped\n";
 }
 
 uint32_t *H3BOARD::map_register(off_t address) {
-
   int mem_fd;
   if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
     perror("can't open /dev/mem: ");
@@ -254,23 +242,20 @@ uint32_t *H3BOARD::map_register(off_t address) {
   uint32_t *result =
     (uint32_t*) mmap(nullptr,               // Any adddress in our space will do
                      REGISTER_BLOCK_SIZE,   // Map length
-                     PROT_READ|PROT_WRITE,  // Enable r/w on GPIO registers.
+                     PROT_READ|PROT_WRITE,  // Enable r/w on registers.
                      MAP_SHARED,
                      mem_fd,                // File to map
-                     address                // Offset to bcm register
+                     address                // Memory address before registers at a page boundary
                      );
   close(mem_fd);
 
   if (result == MAP_FAILED) {
     perror("mmap error: ");
-    fprintf(stderr, "MMapping to address 0x%lx\n",
-            address);
-    fprintf(stderr, "Pagesize: %ld\n",sysconf(_SC_PAGE_SIZE));
+    fprintf(stderr, "MMapping to address 0x%lx\n",address);
     return nullptr;
   }
   return result;
 }
-
 
 void H3BOARD::SetTxPower(CarrierPower power) {
   switch (power) {
@@ -289,7 +274,7 @@ void H3BOARD::SetTxPower(CarrierPower power) {
 }
 
 // Wait until PWM register is not busy
-void H3BOARD::WaitPwmPeriodBusy() {
+void H3BOARD::WaitPwmPeriodReady() {
   if(debug) cout << "Waiting for PWM period register availability\n";   
   while (registers[PWM_CTRL_REG] & (0b1 << PWM0_RDY)) {
   //   if(debug) fprintf(stderr,"PWM CTRL reg: 0x%x\n",registers[PWM_CTRL_REG]);   

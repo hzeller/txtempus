@@ -89,7 +89,7 @@ class HardwareControl::Implementation {
 
   // Calculate PWM parameters based on requested output frequency
   pwm_params CalculatePWMParams(double requested_freq);
-  void WaitPwmPeriodBusy();
+  void WaitPwmPeriodReady();
 
 };
 
