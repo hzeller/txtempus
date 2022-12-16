@@ -28,10 +28,13 @@ clock sources inside these, check out that bug for a workaround.
 
 #### SunxiH3 - OrangePI PC
 So far, it has been tested on an OrangePI PC. Any H3 based boards should work.
-The H3 has only one PWM available - PWM0. This - on the OrabgePI PC board has
-a clock output on the debug UART - UART0. The PWM output is the PA5 pin, connected to
-the middle pin of the debug UART. For amplitude modulation PA4 is used, next to PA5 on the
-debug UART. The third pin of the debug UART is a ground, which can be used as in case of the Pi.  
+The H3 has only one PWM available - PWM0. This - on the OrabgePI PC board - has
+a clock output on the 3-pin header debug UART UART0. The PWM output is the PA5 pin, connected to
+the middle pin of the debug UART. For amplitude modulation PA6 (GPIO17) is used, just as in case of thePi.
+
+One may consider using PA4 as the amplitude modulation pin- next to the PWM clock pin - but my
+experience shows that the board would not normally boot with the default settings if the antenna
+is connected to the debug UART.
 
 
 #### Nvidia Jetson Series (experimental)
@@ -70,7 +73,7 @@ If you're in/or want to display a different time-zone, issue
 you.
 
 ### Minimal External Hardware
-#### Raspberry Pi
+#### Raspberry Pi & H3 OrangePI
 The external hardware is simple: we use the frequency output on one pin and
 another pin to pull the signal to a lower level for the regular attenuation.
 
@@ -83,7 +86,8 @@ Schematic                      | Real world
 
 
 GPIO4 and 17 are on the inner row of the Header pin, three pins inwards on
-the [Raspberry Pi GPIO]-Header.
+the [Raspberry Pi GPIO]-Header.	For the OrangePI instead of using GPIO4 connect
+the wire to PA5 - the middle pin of the 3-pin debug UART header - UART0.
 
 You don't need GPIO17 and the 560Ω resistor for `MSF`, as that works with
 switching the signal (on-off keying) instead of attenuating. In that case, you
@@ -154,6 +158,12 @@ watch/clock.
 #### Rapberry Pi
 ```
  cmake ../ # or cmake ../ -DPLATFORM=rpi
+ make
+```
+
+#### SunxiH3 - OrangePI PC
+```
+ cmake ../ -DPLATFORM=sunxih3
  make
 ```
 
@@ -304,4 +314,5 @@ watch holder             | ... with watch
 [MSF]: https://en.wikipedia.org/wiki/Time_from_NPL_(MSF)
 [NTP]: https://en.wikipedia.org/wiki/Network_Time_Protocol
 [Raspberry Pi GPIO]: https://www.raspberrypi.org/documentation/usage/gpio/
+[Allwinner H3 Datasheet]: https://linux-sunxi.org/H3
 [very wrong frequency]: https://github.com/hzeller/txtempus/issues/1
