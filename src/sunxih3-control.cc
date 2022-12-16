@@ -209,7 +209,6 @@ double H3BOARD::StartClock(double requested_freq) {
 }
 
 void H3BOARD::StopClock() {
-  WaitPwmBusy();
   if(debug) cout << "Stopclock busywait in stopclock done done\n";
 
   registers[PWM_CH_CTRL] = PWM_DEFAULT_OFF;
