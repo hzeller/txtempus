@@ -291,7 +291,7 @@ void H3BOARD::SetTxPower(CarrierPower power) {
 
 // Wait until PWM register is not busy
 void H3BOARD::WaitPwmPeriodBusy() {
-  if(debug) cout << "Waiting for period available\n";   
+  if(debug) cout << "Waiting for PWM period register availability\n";   
   while (registers[PWM_CTRL_REG] & (0b1 << PWM0_RDY)) {
   //   if(debug) fprintf(stderr,"PWM CTRL reg: 0x%x\n",registers[PWM_CTRL_REG]);   
 //     if(debug) fprintf(stderr,"PWM CTRL reg busy: %d\n",registers[PWM_CTRL_REG] & (0b1 << PWM0_RDY));
