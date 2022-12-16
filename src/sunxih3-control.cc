@@ -220,7 +220,7 @@ double H3BOARD::StartClock(double requested_freq) {
 
   EnableClockOutput(true);
   if(debug) cout << "Output enabled done\n";
-  if(debug) fprintf(stderr,"Written to PWM Control reg: %x\n",pwm_control);
+
   if(debug) fprintf(stderr,"Read from PWM Control reg: %x\n",registers[PWM_CTRL_REG]);
 
   return params.frequency;
