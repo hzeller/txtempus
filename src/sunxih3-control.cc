@@ -153,6 +153,8 @@ void H3BOARD::EnableClockOutput(bool enable) {
 
     registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value;
     if(debug) fprintf(stderr,"PA reg config on enable: %x \n",registers[PA_CFG0_REG]);
+    if(debug) fprintf(stderr,"Read from PWM Period reg on enable: %x\n",registers[PWM_CH0_PERIOD]);
+    if(debug) fprintf(stderr,"Read from PA0 register reg on enable: %x\n\n\n",registers[PA_CFG0_REG]); 
   } else {
     SetInput(PA5);
   }
