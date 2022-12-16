@@ -185,7 +185,7 @@ double H3BOARD::StartClock(double requested_freq) {
   StopClock();
   if(debug) cout << "Clockstop done\n";
 
-
+  WaitPwmPeriodBusy();
   // Setup PWM period tpo 50% duty cycle
   pwm_period = params.period << PWM_CH0_ENTIRE_CYS |
                (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
@@ -194,7 +194,6 @@ double H3BOARD::StartClock(double requested_freq) {
   if(debug) cout << "Period written done\n";
 
   // Setup PWM control register
-  WaitPwmBusy();
   if(debug) cout << "Busy wait done done\n";
 
   pwm_control =  0b1 << PWM_CH0_PUL_START | 
@@ -268,10 +267,11 @@ void H3BOARD::SetTxPower(CarrierPower power) {
 }
 
 // Wait until PWM register is not busy
-void H3BOARD::WaitPwmBusy() {
+void H3BOARD::WaitPwmPeriodBusy() {
   while (registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY)) {
    if(debug) fprintf(stderr,"PWM CTRL reg: 0x%x\n",registers[PWM_CH_CTRL]);   
-   if(debug) fprintf(stderr,"PWM CTRL reg busy: %d\n",registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY));   
+   if(debug) fprintf(stderr,"PWM CTRL reg busy: %d\n",registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY));
+   return;   
     usleep(5);
   }
 }
