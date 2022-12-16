@@ -214,20 +214,14 @@ double H3BOARD::StartClock(double requested_freq) {
   if(debug) fprintf(stderr,"Read from PWM Period reg: %x\n",registers[PWM_CH0_PERIOD]);
   if(debug) fprintf(stderr,"Read from PA0 register reg: %x\n\n\n",registers[PA_CFG0_REG]);
 
-  if(debug) fprintf(stderr,"Written to PWM Period reg: %x\n",pwm_period);
-  if(debug) fprintf(stderr,"Read from PWM Period reg: %x\n",registers[PWM_CH0_PERIOD]);
-
   if(debug) cout << "Period written done\n";
 
   usleep(50);
 
-  if(debug) fprintf(stderr,"Written to PWM Control reg: %x\n",pwm_control);
-  if(debug) fprintf(stderr,"Read from PWM Control reg: %x\n",registers[PWM_CTRL_REG]);
-
-  if(debug) cout << "PWM running done\n";
-
   EnableClockOutput(true);
   if(debug) cout << "Output enabled done\n";
+  if(debug) fprintf(stderr,"Written to PWM Control reg: %x\n",pwm_control);
+  if(debug) fprintf(stderr,"Read from PWM Control reg: %x\n",registers[PWM_CTRL_REG]);
 
   return params.frequency;
 }
