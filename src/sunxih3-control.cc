@@ -63,7 +63,7 @@ bool debug = true;
 #define PA5_PULL_SHIFT 10 // Bits [2i+1:2i] (i=0~15)
 
 // Amount of memory to map after registers to access all offsets
-#define REGISTER_BLOCK_SIZE 2*4096
+#define REGISTER_BLOCK_SIZE 2*4096*sizeof(uint32_t)
 
 // PWM Base frequency - 24MHz
 #define PWM_BASE_FREQUENCY 24e6
@@ -209,8 +209,6 @@ double H3BOARD::StartClock(double requested_freq) {
 }
 
 void H3BOARD::StopClock() {
-  if(debug) cout << "Stopclock busywait in stopclock done done\n";
-
   registers[PWM_CH_CTRL] = PWM_DEFAULT_OFF;
   registers[PWM_CH0_PERIOD] = PWM_DEFAULT_OFF;
   if(debug) cout << "PWM default in stopclock done\n";
