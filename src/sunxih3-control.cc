@@ -33,18 +33,18 @@
 // -- Implementation for Allwinner H3 boards --
 
 // Allwiner H3 Orangepi Register Addresses
-#define PWM_BASE 0x01C21400
-#define PIO_BASE 0x01C20800
+#define PWM_BASE 0x01C21400-512
+#define PIO_BASE 0x01C20800-512
 
 // Register offsets
-#define PWM_CH_CTRL 0x0
-#define PWM_CH0_PERIOD 0x04
-#define PA_CFG0_REG 0x0
-#define PA_PULL0_REG 0x1C
-#define PA_DATA_REG 0x10
+#define PWM_CH_CTRL 0x0+512
+#define PWM_CH0_PERIOD 0x04+512
+#define PA_CFG0_REG 0x0+512
+#define PA_PULL0_REG 0x1C+512
+#define PA_DATA_REG 0x10+512
 
 // PA IO configure values
-#define P_OUTPUT 0b001 
+#define P_OUTPUT 0b001
 #define P_INPUT 0b000
 #define P_MASK 0b111
 #define PA5_PWM0 0b011
@@ -58,7 +58,7 @@
 #define PA5_PULL_SHIFT 10 // Bits [2i+1:2i] (i=0~15)
 
 // Amount of memory to map after registers to access all offsets
-#define REGISTER_BLOCK_SIZE (4*1024)
+#define REGISTER_BLOCK_SIZE 1024
 
 // PWM Base frequency - 24MHz
 #define PWM_BASE_FREQUENCY 24e6
@@ -222,6 +222,7 @@ uint32_t *H3BOARD::map_register(off_t address) {
     perror("mmap error: ");
     fprintf(stderr, "MMapping to address 0x%lx\n",
             address);
+    fprintf(stderr, "Pagesize: %ld\n",sysconf(_SC_PAGE_SIZE));
     return nullptr;
   }
   return result;
