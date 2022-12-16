@@ -196,8 +196,8 @@ double H3BOARD::StartClock(double requested_freq) {
   assert(params.prescale != -1);
   if(debug) cout << "Calcfreq done\n";
 
-  StopClock();
-  if(debug) cout << "Clockstop done\n";
+  //StopClock();
+  //if(debug) cout << "Clockstop done\n";
 
   WaitPwmPeriodBusy();
   if(debug) cout << "Busy wait done done\n";
