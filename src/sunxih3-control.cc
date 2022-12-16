@@ -38,15 +38,15 @@ bool debug = true;
 
 // Allwiner H3 Orangepi Register Addresses
 #define PAGESIZE_CORRECTOR 0x800
-#define PWM_OFFSET 0xC00
+#define PWM_OFFSET 0xC00/sizeof(uint32_t)
 #define REG_BASE 0x01C20800 - PAGESIZE_CORRECTOR
 
 // Register offsets
-#define PWM_CH_CTRL PWM_OFFSET + 0x0/sizeof(uint32_t) + PAGESIZE_CORRECTOR
-#define PWM_CH0_PERIOD PWM_OFFSET + 0x04/sizeof(uint32_t) + PAGESIZE_CORRECTOR
-#define PA_CFG0_REG 0x0/sizeof(uint32_t) + PAGESIZE_CORRECTOR
-#define PA_PULL0_REG 0x1C/sizeof(uint32_t) + PAGESIZE_CORRECTOR
-#define PA_DATA_REG 0x10/sizeof(uint32_t) + PAGESIZE_CORRECTOR
+#define PWM_CH_CTRL PWM_OFFSET + 0x0/sizeof(uint32_t) + PAGESIZE_CORRECTOR/sizeof(uint32_t)
+#define PWM_CH0_PERIOD PWM_OFFSET + 0x04/sizeof(uint32_t) + PAGESIZE_CORRECTOR/sizeof(uint32_t)
+#define PA_CFG0_REG 0x0/sizeof(uint32_t) + PAGESIZE_CORRECTOR/sizeof(uint32_t)
+#define PA_PULL0_REG 0x1C/sizeof(uint32_t) + PAGESIZE_CORRECTOR/sizeof(uint32_t)
+#define PA_DATA_REG 0x10/sizeof(uint32_t) + PAGESIZE_CORRECTOR/sizeof(uint32_t)
 
 // PA IO configure values
 #define P_OUTPUT 0b001
