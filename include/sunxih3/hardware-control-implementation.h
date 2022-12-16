@@ -63,10 +63,10 @@ class HardwareControl::Implementation {
   // PWM clock presaclers
   std::map<int, int>PwmCh0Prescale;
 
-  // PA6 and PA5 pins are used
+  // PA4 and PA5 pins are used
   enum gpio_pin {
       PA5,
-      PA6
+      PA4
       };
 
   struct pwm_params {

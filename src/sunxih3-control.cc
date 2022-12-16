@@ -59,9 +59,9 @@ bool debug = false;
 #define P_PULL_MASK 0b11
 
 // PA shift values
-#define PA6_CFG_SHIFT 24
+#define PA4_CFG_SHIFT 16
 #define PA5_CFG_SHIFT 20
-#define PA6_PULL_SHIFT 12 // Bits [2i+1:2i] (i=0~15) 
+#define PA4_PULL_SHIFT 8 // Bits [2i+1:2i] (i=0~15) 
 #define PA5_PULL_SHIFT 10 // Bits [2i+1:2i] (i=0~15)
 
 // Amount of memory to map after registers to access all offsets
@@ -101,14 +101,14 @@ bool H3BOARD::Init() {
   return registers != MAP_FAILED && registers != MAP_FAILED;
 }
 
-// Disable pullups on PA6 and enable it os PA5
+// Disable pullups on PA4 and enable it os PA5
 void H3BOARD::ConfigurePins(void) {
   uint32_t mask, value;
   assert(registers);  // Call Init() first.
 
-  // Disable Pullup on PA6
-  mask = P_PULL_MASK << PA6_PULL_SHIFT;
-  value = P_PULL_DISABLE << PA6_PULL_SHIFT;
+  // Disable Pullup on PA4
+  mask = P_PULL_MASK << PA4_PULL_SHIFT;
+  value = P_PULL_DISABLE << PA4_PULL_SHIFT;
   registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | value; 
 
   // Enable Pullup on PA5
@@ -121,19 +121,19 @@ void H3BOARD::ConfigurePins(void) {
   registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value;
 }
 
-// Set the pin as output - LoZ state - PA6 pulls down if set to zero
+// Set the pin as output - LoZ state - PA4 pulls down if set to zero
 void H3BOARD::SetOutput(gpio_pin pin) {
   uint32_t shift, mask, value;
   assert(registers);  // Call Init() first.
 
-  shift = pin == PA6 ? PA6_CFG_SHIFT : PA5_CFG_SHIFT;
+  shift = pin == PA4 ? PA4_CFG_SHIFT : PA5_CFG_SHIFT;
   mask = P_MASK << shift;
   value = P_OUTPUT << shift;
 
   registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value;
 
-  // Write zero to PA6 to make sure we pull it down
-  if (pin == PA6)
+  // Write zero to PA4 to make sure we pull it down
+  if (pin == PA4)
     registers[PA_DATA_REG] |= 0b1 << 6;
 }
 
@@ -142,7 +142,7 @@ void H3BOARD::SetInput(gpio_pin pin) {
   uint32_t shift, mask, value;
   assert(registers);  // Call Init() first.
 
-  shift = pin == PA6 ? PA6_CFG_SHIFT : PA5_CFG_SHIFT;
+  shift = pin == PA4 ? PA4_CFG_SHIFT : PA5_CFG_SHIFT;
   mask = P_MASK << shift;
   value = P_INPUT << shift;
 
@@ -257,11 +257,11 @@ void H3BOARD::SetTxPower(CarrierPower power) {
     EnableClockOutput(false);
     break;
   case CarrierPower::LOW:
-    SetOutput(PA6);
+    SetOutput(PA4);
     EnableClockOutput(true);
     break;
   case CarrierPower::HIGH:
-    SetInput(PA6);   // High-Z
+    SetInput(PA4);   // High-Z
     EnableClockOutput(true);
     break;
   }
