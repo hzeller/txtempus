@@ -16,6 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <inttypes.h>
+#include <iostream>
 
 #include "hardware-control.h"
 #include "hardware-control-implementation.h"
@@ -29,6 +30,9 @@
 #include <sys/mman.h>
 #include <time.h>
 #include <unistd.h>
+using namespace std;
+
+bool debug = true;
 
 // -- Implementation for Allwinner H3 boards --
 
@@ -38,8 +42,8 @@
 #define REG_BASE 0x01C20800 - PAGESIZE_CORRECTOR
 
 // Register offsets
-#define PWM_CH_CTRL 0x0 + PWM_OFFSET + PAGESIZE_CORRECTOR
-#define PWM_CH0_PERIOD 0x04 + PWM_OFFSET + PAGESIZE_CORRECTOR
+#define PWM_CH_CTRL PWM_OFFSET + 0x0 + PAGESIZE_CORRECTOR
+#define PWM_CH0_PERIOD PWM_OFFSET + 0x04 + PAGESIZE_CORRECTOR
 #define PA_CFG0_REG 0x0 + PAGESIZE_CORRECTOR
 #define PA_PULL0_REG 0x1C + PAGESIZE_CORRECTOR
 #define PA_DATA_REG 0x10 + PAGESIZE_CORRECTOR
@@ -81,6 +85,7 @@ bool H3BOARD::Init() {
     {1, 0b1111}};
 
   registers = map_register(REG_BASE);
+  if(debug) cout << "Mapped\n";
 
   if (registers == nullptr || registers == nullptr) {
     fprintf(stderr, "Need to be root\n");
@@ -89,6 +94,7 @@ bool H3BOARD::Init() {
 
   if(registers != MAP_FAILED && registers != MAP_FAILED)
     DisablePaPulls();
+  if(debug) cout << "Pullups done\n";
 
   return registers != MAP_FAILED && registers != MAP_FAILED;
 }
@@ -174,21 +180,31 @@ double H3BOARD::StartClock(double requested_freq) {
 
   params =  CalculatePWMParams(requested_freq);
   assert(params.prescale != -1);
+  if(debug) cout << "Calcfreq done\n";
 
   StopClock();
+  if(debug) cout << "Clockstop done\n";
+
+
   // Setup PWM period tpo 50% duty cycle
   pwm_period = params.period << PWM_CH0_ENTIRE_CYS |
                (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
   registers[PWM_CH0_PERIOD] = pwm_period;
 
+  if(debug) cout << "Period written done\n";
+
   // Setup PWM control register
   WaitPwmBusy();
+  if(debug) cout << "Busy wait done done\n";
+
   pwm_control =  0b1 << PWM_CH0_PUL_START | 
                   0b1 << PWM_CH0_EN |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
   registers[PWM_CH_CTRL] = pwm_control;
+  if(debug) cout << "PWM running done\n";
 
   EnableClockOutput(true);
+  if(debug) cout << "Output enabled done\n";
 
   return params.frequency;
 }
