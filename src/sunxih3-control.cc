@@ -32,7 +32,7 @@
 #include <unistd.h>
 using namespace std;
 
-bool debug = true;
+bool debug = false;
 
 // -- Implementation for Allwinner H3 boards --
 
@@ -162,10 +162,6 @@ void H3BOARD::EnableClockOutput(bool enable) {
   mask = 0b1 << PWM_CH0_EN;
   if(enable) {
     registers[PWM_CTRL_REG] |= mask;
-  
-    //if(debug) fprintf(stderr,"PA0 Config reg on enable: %x \n",registers[PA_CFG0_REG]);
-    //if(debug) fprintf(stderr,"PWM Period reg on enable: %x\n",registers[PWM_CH0_PERIOD]);
-    //if(debug) fprintf(stderr,"PWM Config reg on enable: %x\n\n\n",registers[PWM_CTRL_REG]); 
   } else {
     registers[PWM_CTRL_REG] &= ~mask;
   }
@@ -192,41 +188,36 @@ H3BOARD::pwm_params H3BOARD::CalculatePWMParams(double requested_freq) {
   return params;
 }
 
-
 // Setup the PWM
 double H3BOARD::StartClock(double requested_freq) {
   pwm_params params;
   uint32_t pwm_control, pwm_period;
 
+  // Get PWM parameters for the requested frequency 
   params =  CalculatePWMParams(requested_freq);
   assert(params.prescale != -1);
   if(debug) cout << "Calcfreq done\n";
 
-  // Setup PWM control register
+  // Start Gating clock
   pwm_control =   0b1 << SCLK_CH0_GATING |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
   registers[PWM_CTRL_REG] = pwm_control;
 
   WaitPwmPeriodBusy();
-  if(debug) cout << "Busy wait done done\n";
 
-  // Setup PWM period tpo 50% duty cycle
+  // Setup PWM period to 50% duty cycle
   if(debug) fprintf(stderr,"Presacale: %d  Period: %d\n",params.prescale,params.period);
   pwm_period = params.period << PWM_CH0_ENTIRE_CYS |
                (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
   registers[PWM_CH0_PERIOD] = pwm_period;
+
   WaitPwmPeriodBusy();
-  if(debug) fprintf(stderr,"Read from PWM Control reg: %x\n",registers[PWM_CTRL_REG]);
-  if(debug) fprintf(stderr,"Read from PWM Period reg: %x\n",registers[PWM_CH0_PERIOD]);
-  if(debug) fprintf(stderr,"Read from PA0 register reg: %x\n\n\n",registers[PA_CFG0_REG]);
 
-  if(debug) cout << "Period written done\n";
+//  pwm_control =   0b1 << PWM_CH0_ACT_STA;
+ // registers[PWM_CTRL_REG] |= pwm_control;
 
-  pwm_control =   0b1 << PWM_CH0_ACT_STA;
-  registers[PWM_CTRL_REG] |= pwm_control;
-
-  usleep(50);
-  registers[PWM_CTRL_REG] &= ~pwm_control;
+ // usleep(50);
+//  registers[PWM_CTRL_REG] &= ~pwm_control;
 
   usleep(50);
   EnableClockOutput(true);
