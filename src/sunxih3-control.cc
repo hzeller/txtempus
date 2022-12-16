@@ -226,7 +226,7 @@ void H3BOARD::StopClock() {
   
   pwm_control_mask = 0b1 << PWM_CH0_EN;
 
-  register[PWM_CTRL_REG] &= ~pwm_control_mask;
+  registers[PWM_CTRL_REG] &= ~pwm_control_mask;
 
   EnableClockOutput(false);
   if(debug) cout << "Output false in stopclock done\n";
