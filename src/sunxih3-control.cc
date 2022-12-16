@@ -205,6 +205,10 @@ double H3BOARD::StartClock(double requested_freq) {
                   0b1 << PWM_CH0_EN |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
   registers[PWM_CH_CTRL] = pwm_control;
+
+  if(debug) fprintf(stderr,"Written to Control reg: %x\n",pwm_control);
+  if(debug) fprintf(stderr,"Read from Control reg: %x\n",registers[PWM_CH_CTRL]);
+
   if(debug) cout << "PWM running done\n";
 
   EnableClockOutput(true);
