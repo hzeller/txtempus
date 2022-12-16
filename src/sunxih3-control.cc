@@ -134,7 +134,7 @@ void H3BOARD::SetOutput(gpio_pin pin) {
 
   // Write zero to PA4 to make sure we pull it down
   if (pin == PA4)
-    registers[PA_DATA_REG] |= 0b1 << 6;
+    registers[PA_DATA_REG] |= 0b1 << 4;
 }
 
 // Set the pin as Input - HiZ state
