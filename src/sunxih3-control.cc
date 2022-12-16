@@ -116,6 +116,7 @@ void H3BOARD::ConfigurePins(void) {
   value = P_PULL_UP << PA5_PULL_SHIFT;
   registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | value; 
 
+  // Setup PA5 as PWM0 output
   mask = P_MASK << PA5_CFG_SHIFT;
   value = PA5_PWM0 << PA5_CFG_SHIFT;
   registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value;
