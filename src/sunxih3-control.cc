@@ -42,11 +42,11 @@ bool debug = true;
 #define REG_BASE 0x01C20800 - PAGESIZE_CORRECTOR
 
 // Register offsets
-#define PWM_CH_CTRL PWM_OFFSET + 0x0 + PAGESIZE_CORRECTOR
-#define PWM_CH0_PERIOD PWM_OFFSET + 0x04 + PAGESIZE_CORRECTOR
-#define PA_CFG0_REG 0x0 + PAGESIZE_CORRECTOR
-#define PA_PULL0_REG 0x1C + PAGESIZE_CORRECTOR
-#define PA_DATA_REG 0x10 + PAGESIZE_CORRECTOR
+#define PWM_CH_CTRL PWM_OFFSET + 0x0/sizeof(uint32_t) + PAGESIZE_CORRECTOR
+#define PWM_CH0_PERIOD PWM_OFFSET + 0x04/sizeof(uint32_t) + PAGESIZE_CORRECTOR
+#define PA_CFG0_REG 0x0/sizeof(uint32_t) + PAGESIZE_CORRECTOR
+#define PA_PULL0_REG 0x1C/sizeof(uint32_t) + PAGESIZE_CORRECTOR
+#define PA_DATA_REG 0x10/sizeof(uint32_t) + PAGESIZE_CORRECTOR
 
 // PA IO configure values
 #define P_OUTPUT 0b001
@@ -63,7 +63,7 @@ bool debug = true;
 #define PA5_PULL_SHIFT 10 // Bits [2i+1:2i] (i=0~15)
 
 // Amount of memory to map after registers to access all offsets
-#define REGISTER_BLOCK_SIZE 2*4096*sizeof(uint32_t)
+#define REGISTER_BLOCK_SIZE 4096*sizeof(uint32_t)
 
 // PWM Base frequency - 24MHz
 #define PWM_BASE_FREQUENCY 24e6
