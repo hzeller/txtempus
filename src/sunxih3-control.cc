@@ -153,7 +153,7 @@ void H3BOARD::EnableClockOutput(bool enable) {
   uint32_t mask;
   assert(registers);  // Call Init() first.
 
-  mask = 0b1 << SCLK_CH0_GATING;
+  mask = 0b1 << PWM_CH0_EN;
   if(enable) {
     registers[PWM_CTRL_REG] |= mask;
   
@@ -207,20 +207,17 @@ double H3BOARD::StartClock(double requested_freq) {
                (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
   registers[PWM_CH0_PERIOD] = pwm_period;
 
-while(1) {
   if(debug) fprintf(stderr,"Read from PWM Control reg: %x\n",registers[PWM_CTRL_REG]);
   if(debug) fprintf(stderr,"Read from PWM Period reg: %x\n",registers[PWM_CH0_PERIOD]);
   if(debug) fprintf(stderr,"Read from PA0 register reg: %x\n\n\n",registers[PA_CFG0_REG]);
 
-  sleep(1);
-}
   if(debug) fprintf(stderr,"Written to PWM Period reg: %x\n",pwm_period);
   if(debug) fprintf(stderr,"Read from PWM Period reg: %x\n",registers[PWM_CH0_PERIOD]);
 
   if(debug) cout << "Period written done\n";
 
   // Setup PWM control register
-  pwm_control =   0b1 << SCLK_CH0_GATING |
+  pwm_control =   0b1 << PWM_CH0_EN |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
   registers[PWM_CTRL_REG] = pwm_control;
 
@@ -238,7 +235,7 @@ while(1) {
 void H3BOARD::StopClock() {
   uint32_t pwm_control_mask;
   
-  pwm_control_mask = 0b1 << SCLK_CH0_GATING;
+  pwm_control_mask = 0b1 << PWM_CH0_EN;
 
   registers[PWM_CTRL_REG] &= ~pwm_control_mask;
 
