@@ -144,12 +144,11 @@ void H3BOARD::SetInput(gpio_pin pin) {
 }
 
 void H3BOARD::EnableClockOutput(bool enable) {
-  uint32_t mask, value;
+  uint32_t mask;
   assert(registers);  // Call Init() first.
 
-  mask =   0b1 << SCLK_CH0_GATING;  
+  mask = 0b1 << SCLK_CH0_GATING;
   if(enable) {
-|
     registers[PWM_CTRL_REG] |= mask;
   
     //if(debug) fprintf(stderr,"PA0 Config reg on enable: %x \n",registers[PA_CFG0_REG]);
