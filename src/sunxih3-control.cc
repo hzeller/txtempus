@@ -106,9 +106,6 @@ void H3BOARD::ConfigurePins(void) {
   uint32_t mask, value;
   assert(registers);  // Call Init() first.
 
-  if(debug) fprintf(stderr,"Before pullup write: %x\n",registers[PA_PULL0_REG]);
-  if(debug) fprintf(stderr,"Before PA config write: %x\n",registers[PA_CFG0_REG]);
-
   // Disable Pullup on PA6
   mask = P_PULL_MASK << PA6_PULL_SHIFT;
   value = P_PULL_DISABLE << PA6_PULL_SHIFT;
@@ -122,9 +119,6 @@ void H3BOARD::ConfigurePins(void) {
   mask = P_MASK << PA5_CFG_SHIFT;
   value = PA5_PWM0 << PA5_CFG_SHIFT;
   registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value;
-
-  if(debug) fprintf(stderr,"After pullup write: %x\n",registers[PA_PULL0_REG]);
-  if(debug) fprintf(stderr,"After PA config write: %x\n",registers[PA_CFG0_REG]);
 }
 
 // Set the pin as output - LoZ state - PA6 pulls down if set to zero
