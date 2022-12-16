@@ -33,15 +33,15 @@
 // -- Implementation for Allwinner H3 boards --
 
 // Allwiner H3 Orangepi Register Addresses
-#define PWM_BASE 0x01C21400-512
-#define PIO_BASE 0x01C20800-512
+#define PWM_BASE 0x01C21400-1024
+#define PIO_BASE 0x01C20800-1024
 
 // Register offsets
-#define PWM_CH_CTRL 0x0+512
-#define PWM_CH0_PERIOD 0x04+512
-#define PA_CFG0_REG 0x0+512
-#define PA_PULL0_REG 0x1C+512
-#define PA_DATA_REG 0x10+512
+#define PWM_CH_CTRL 0x0+1024
+#define PWM_CH0_PERIOD 0x04+1024
+#define PA_CFG0_REG 0x0+1024
+#define PA_PULL0_REG 0x1C+1024
+#define PA_DATA_REG 0x10+1024
 
 // PA IO configure values
 #define P_OUTPUT 0b001
@@ -58,7 +58,7 @@
 #define PA5_PULL_SHIFT 10 // Bits [2i+1:2i] (i=0~15)
 
 // Amount of memory to map after registers to access all offsets
-#define REGISTER_BLOCK_SIZE 1024
+#define REGISTER_BLOCK_SIZE 4096
 
 // PWM Base frequency - 24MHz
 #define PWM_BASE_FREQUENCY 24e6
