@@ -195,6 +195,8 @@ double H3BOARD::StartClock(double requested_freq) {
                (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
   registers[PWM_CH0_PERIOD] = pwm_period;
 
+  if(debug) fprintf(stderr,"wrotten to Period reg: %x\n",pwm_period);
+
   if(debug) cout << "Period written done\n";
 
   // Setup PWM control register
