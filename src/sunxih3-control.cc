@@ -167,6 +167,7 @@ H3BOARD::pwm_params H3BOARD::CalculatePWMParams(double requested_freq) {
       params.prescale =  kx.first;
       params.period = cycles;
       params.frequency = effective_freq;
+      error = fabs(requested_freq - effective_freq);
     }
   }
   return params;
