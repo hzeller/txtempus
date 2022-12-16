@@ -205,6 +205,8 @@ while(1) {
   if(debug) fprintf(stderr,"Read from PWM Control reg: %x\n",registers[PWM_CTRL_REG]);
   if(debug) fprintf(stderr,"Read from PWM Period reg: %x\n",registers[PWM_CH0_PERIOD]);
   if(debug) fprintf(stderr,"Read from PA0 register reg: %x\n\n\n",registers[PA_CFG0_REG]);
+
+  sleep(1);
 }
   if(debug) fprintf(stderr,"Written to PWM Period reg: %x\n",pwm_period);
   if(debug) fprintf(stderr,"Read from PWM Period reg: %x\n",registers[PWM_CH0_PERIOD]);
