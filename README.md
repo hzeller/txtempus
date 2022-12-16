@@ -18,13 +18,21 @@ centimeters, but **_before running this program, make sure you follow your
 local laws with regard to restrictions on radio transmissions._**
 
 ### Platform
-txtempus supports Raspberry Pi series and Nvidia Jetson Series (experimental).
+txtempus supports Raspberry Pi series, Sunxi H3 Allwinner based boards (e.g. OrangePI PC) and Nvidia Jetson Series (experimental).
 
 #### Raspberry Pi
 So far, it has been tested on a Pi3 and a
 Pi Zero W. There has been a report of different frequencies generated with
 an older Pi (Bug #1), so until we have a definitive list of available
 clock sources inside these, check out that bug for a workaround.
+
+#### SunxiH3 - OrangePI PC
+So far, it has been tested on an OrangePI PC. Any H3 based boards should work.
+The H3 has only one PWM available - PWM0. This - on the OrabgePI PC board has
+a clock output on the debug UART - UART0. The PWM output is the PA5 pin, connected to
+the middle pin of the debug UART. For amplitude modulation PA4 is used, next to PA5 on the
+debug UART. The third pin of the debug UART is a ground, which can be used as in case of the Pi.  
+
 
 #### Nvidia Jetson Series (experimental)
 So far, it has been tested only on a Jetson Nano,
