@@ -33,15 +33,16 @@
 // -- Implementation for Allwinner H3 boards --
 
 // Allwiner H3 Orangepi Register Addresses
-#define PWM_BASE 0x01C21400-1024
-#define PIO_BASE 0x01C20800-1024
+#define PAGESIZE_CORRECTOR 0x800
+#define PWM_OFFSET 0xC00
+#define REG_BASE 0x01C20800 - PAGESIZE_CORRECTOR
 
 // Register offsets
-#define PWM_CH_CTRL 0x0+1024
-#define PWM_CH0_PERIOD 0x04+1024
-#define PA_CFG0_REG 0x0+1024
-#define PA_PULL0_REG 0x1C+1024
-#define PA_DATA_REG 0x10+1024
+#define PWM_CH_CTRL 0x0 + PWM_OFFSET + PAGESIZE_CORRECTOR
+#define PWM_CH0_PERIOD 0x04 + PWM_OFFSET + PAGESIZE_CORRECTOR
+#define PA_CFG0_REG 0x0 + PAGESIZE_CORRECTOR
+#define PA_PULL0_REG 0x1C + PAGESIZE_CORRECTOR
+#define PA_DATA_REG 0x10 + PAGESIZE_CORRECTOR
 
 // PA IO configure values
 #define P_OUTPUT 0b001
@@ -58,7 +59,7 @@
 #define PA5_PULL_SHIFT 10 // Bits [2i+1:2i] (i=0~15)
 
 // Amount of memory to map after registers to access all offsets
-#define REGISTER_BLOCK_SIZE 4096
+#define REGISTER_BLOCK_SIZE 2*4096
 
 // PWM Base frequency - 24MHz
 #define PWM_BASE_FREQUENCY 24e6
@@ -79,69 +80,68 @@ bool H3BOARD::Init() {
     {72000, 0b1100},
     {1, 0b1111}};
 
-  pwmreg = map_register(PWM_BASE);
-  pioreg = map_register(PIO_BASE);
+  registers = map_register(REG_BASE);
 
-  if (pwmreg == nullptr || pioreg == nullptr) {
+  if (registers == nullptr || registers == nullptr) {
     fprintf(stderr, "Need to be root\n");
     return false;
   }
 
-  if(pwmreg != MAP_FAILED && pioreg != MAP_FAILED)
+  if(registers != MAP_FAILED && registers != MAP_FAILED)
     DisablePaPulls();
 
-  return pwmreg != MAP_FAILED && pioreg != MAP_FAILED;
+  return registers != MAP_FAILED && registers != MAP_FAILED;
 }
 
 // Disable pullups on PA5 and PA6
 // Disabled is the default but let's make sure
 void H3BOARD::DisablePaPulls(void) {
   int mask, value;
-  assert(pioreg);  // Call Init() first.
+  assert(registers);  // Call Init() first.
 
   mask = P_PULL_MASK << PA6_PULL_SHIFT | P_PULL_MASK << PA5_PULL_SHIFT;
   value = P_PULL_DISABLE;
 
-   pioreg[PA_PULL0_REG] = (pioreg[PA_PULL0_REG] & ~mask) | value; 
+   registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | value; 
 }
 
 // Set the pin as output - LoZ state - PA6 pulls down if set to zero
 void H3BOARD::SetOutput(gpio_pin pin) {
   int shift, mask, value;
-  assert(pioreg);  // Call Init() first.
+  assert(registers);  // Call Init() first.
 
   shift = pin == PA6 ? PA6_CFG_SHIFT : PA5_CFG_SHIFT;
   mask = P_MASK << shift;
   value = P_OUTPUT << shift;
 
-  pioreg[PA_CFG0_REG] = (pioreg[PA_CFG0_REG] & ~mask) | value;
+  registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value;
 
   // Write zero to PA6 to make sure we pull it down
   if (pin == PA6)
-    pioreg[PA_DATA_REG] |= 0b1 << 6;
+    registers[PA_DATA_REG] |= 0b1 << 6;
 }
 
 // Set the pin as Input - HiZ state
 void H3BOARD::SetInput(gpio_pin pin) {
   int shift, mask, value;
-  assert(pioreg);  // Call Init() first.
+  assert(registers);  // Call Init() first.
 
   shift = pin == PA6 ? PA6_CFG_SHIFT : PA5_CFG_SHIFT;
   mask = P_MASK << shift;
   value = P_INPUT << shift;
 
-  pioreg[PA_CFG0_REG] = (pioreg[PA_CFG0_REG] & ~mask) | value; 
+  registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value; 
 }
 
 void H3BOARD::EnableClockOutput(bool enable) {
   int mask, value;
-  assert(pioreg);  // Call Init() first.
+  assert(registers);  // Call Init() first.
   
   if(enable) {
     mask = P_MASK << PA5_CFG_SHIFT;
     value = PA5_PWM0 << PA5_CFG_SHIFT;
 
-    pioreg[PA_CFG0_REG] = (pioreg[PA_CFG0_REG] & ~mask) | value;
+    registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value;
   } else {
     SetInput(PA5);
   }
@@ -179,14 +179,14 @@ double H3BOARD::StartClock(double requested_freq) {
   // Setup PWM period tpo 50% duty cycle
   pwm_period = params.period << PWM_CH0_ENTIRE_CYS |
                (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
-  pwmreg[PWM_CH0_PERIOD] = pwm_period;
+  registers[PWM_CH0_PERIOD] = pwm_period;
 
   // Setup PWM control register
   WaitPwmBusy();
   pwm_control =  0b1 << PWM_CH0_PUL_START | 
                   0b1 << PWM_CH0_EN |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
-  pwmreg[PWM_CH_CTRL] = pwm_control;
+  registers[PWM_CH_CTRL] = pwm_control;
 
   EnableClockOutput(true);
 
@@ -195,8 +195,8 @@ double H3BOARD::StartClock(double requested_freq) {
 
 void H3BOARD::StopClock() {
   WaitPwmBusy();
-  pwmreg[PWM_CH_CTRL] = PWM_DEFAULT_OFF;
-  pwmreg[PWM_CH0_PERIOD] = PWM_DEFAULT_OFF;
+  registers[PWM_CH_CTRL] = PWM_DEFAULT_OFF;
+  registers[PWM_CH0_PERIOD] = PWM_DEFAULT_OFF;
   EnableClockOutput(false);
 }
 
@@ -247,7 +247,7 @@ void H3BOARD::SetTxPower(CarrierPower power) {
 
 // Wait until PWM register is not busy
 void H3BOARD::WaitPwmBusy() {
-  while (pwmreg[PWM_CH_CTRL] & (0b1 << PWM0_RDY)) {
+  while (registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY)) {
     usleep(5);
   }
 }

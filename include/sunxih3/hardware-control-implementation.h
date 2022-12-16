@@ -76,8 +76,7 @@ class HardwareControl::Implementation {
       };
   
   // Registers of the board
-  volatile uint32_t *pwmreg = nullptr;
-  volatile uint32_t *pioreg = nullptr;
+  volatile uint32_t *registers = nullptr;
   
   uint32_t *map_register(off_t register_offset);
 
