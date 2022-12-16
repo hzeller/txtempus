@@ -206,7 +206,7 @@ double H3BOARD::StartClock(double requested_freq) {
   pwm_period = params.period << PWM_CH0_ENTIRE_CYS |
                (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
   registers[PWM_CH0_PERIOD] = pwm_period;
-
+  usleep(50);
   if(debug) fprintf(stderr,"Read from PWM Control reg: %x\n",registers[PWM_CTRL_REG]);
   if(debug) fprintf(stderr,"Read from PWM Period reg: %x\n",registers[PWM_CH0_PERIOD]);
   if(debug) fprintf(stderr,"Read from PA0 register reg: %x\n\n\n",registers[PA_CFG0_REG]);
@@ -220,6 +220,8 @@ double H3BOARD::StartClock(double requested_freq) {
   pwm_control =   0b1 << PWM_CH0_EN |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
   registers[PWM_CTRL_REG] = pwm_control;
+
+  usleep(50);
 
   if(debug) fprintf(stderr,"Written to PWM Control reg: %x\n",pwm_control);
   if(debug) fprintf(stderr,"Read from PWM Control reg: %x\n",registers[PWM_CTRL_REG]);
