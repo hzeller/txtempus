@@ -152,7 +152,7 @@ void H3BOARD::EnableClockOutput(bool enable) {
     value = PA5_PWM0 << PA5_CFG_SHIFT;
 
     registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value;
-    if(debug) fprintf(stderr,"PA reg config: %x\n",registers[PA_CFG0_REG]);
+    if(debug) fprintf(stderr,"PA reg config: %x\n",*(registers+PA_CFG0_REG));
   } else {
     SetInput(PA5);
   }
