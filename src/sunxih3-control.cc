@@ -199,13 +199,13 @@ double H3BOARD::StartClock(double requested_freq) {
   //StopClock();
   //if(debug) cout << "Clockstop done\n";
 
-  WaitPwmPeriodBusy();
-  if(debug) cout << "Busy wait done done\n";
-
   // Setup PWM control register
   pwm_control =   0b1 << SCLK_CH0_GATING |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
   registers[PWM_CTRL_REG] = pwm_control;
+
+  WaitPwmPeriodBusy();
+  if(debug) cout << "Busy wait done done\n";
 
   // Setup PWM period tpo 50% duty cycle
   if(debug) fprintf(stderr,"Presacale: %d  Period: %d\n",params.prescale,params.period);
@@ -238,13 +238,12 @@ double H3BOARD::StartClock(double requested_freq) {
 void H3BOARD::StopClock() {
   uint32_t pwm_control_mask;
   
-  pwm_control_mask = 0b1 << PWM_CH0_EN;
+  pwm_control_mask = 0b1 << PWM_CH0_EN |
+                     0b1 << SCLK_CH0_GATING;
 
   registers[PWM_CTRL_REG] &= ~pwm_control_mask;
 
-  EnableClockOutput(false);
-  if(debug) cout << "Output false in stopclock done\n";
-
+  if(debug) cout << "Stop Clock done\n";
 }
 
 uint32_t *H3BOARD::map_register(off_t address) {
