@@ -53,6 +53,9 @@ bool debug = true;
 #define P_INPUT 0b000
 #define P_MASK 0b111
 #define PA5_PWM0 0b011
+#define P_PULL_UP 0b01
+#define P_PULL_DOWN 0b10
+#define P_PULL_DISABLE 0b00
 #define P_PULL_MASK 0b11
 
 // PA shift values
@@ -100,17 +103,20 @@ bool H3BOARD::Init() {
 
 // Disable pullups on PA6 and enable it os PA5
 void H3BOARD::ConfigurePaPulls(void) {
-  uint32_t mask;
+  uint32_t mask, value;
   assert(registers);  // Call Init() first.
 
-  mask = P_PULL_MASK << PA6_PULL_SHIFT;
- 
   if(debug) fprintf(stderr,"Before pullup write: %x\n",registers[PA_PULL0_REG]);
-  
-  registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask); 
 
+  // Disable Pullup on PA6
+  mask = P_PULL_MASK << PA6_PULL_SHIFT;
+  value = P_PULL_DISABLE << PA6_PULL_SHIFT;
+  registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | value; 
+
+  // Enable Pullup on PA5
   mask = P_PULL_MASK << PA5_PULL_SHIFT;
-  registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | mask; 
+  value = P_PULL_UP << PA5_PULL_SHIFT;
+  registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | value; 
 
   if(debug) fprintf(stderr,"After  pullup write: %x\n",registers[PA_PULL0_REG]);
 }
