@@ -196,9 +196,6 @@ double H3BOARD::StartClock(double requested_freq) {
   assert(params.prescale != -1);
   if(debug) cout << "Calcfreq done\n";
 
-  //StopClock();
-  //if(debug) cout << "Clockstop done\n";
-
   // Setup PWM control register
   pwm_control =   0b1 << SCLK_CH0_GATING |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
@@ -238,9 +235,13 @@ double H3BOARD::StartClock(double requested_freq) {
 void H3BOARD::StopClock() {
   uint32_t pwm_control_mask;
   
-  pwm_control_mask = 0b1 << PWM_CH0_EN |
-                     0b1 << SCLK_CH0_GATING;
+  pwm_control_mask = 0b1 << PWM_CH0_EN;
 
+  registers[PWM_CTRL_REG] &= ~pwm_control_mask;
+
+  usleep (100);
+
+  pwm_control_mask = 0b1 << SCLK_CH0_GATING;
   registers[PWM_CTRL_REG] &= ~pwm_control_mask;
 
   if(debug) cout << "Stop Clock done\n";
