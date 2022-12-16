@@ -108,7 +108,11 @@ void H3BOARD::DisablePaPulls(void) {
   mask = P_PULL_MASK << PA6_PULL_SHIFT | P_PULL_MASK << PA5_PULL_SHIFT;
   value = P_PULL_DISABLE;
 
+  if(debug) fprintf(stderr,"Before pullup write: %x\n",registers[PA_PULL0_REG]);
+  
    registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | value; 
+
+   if(debug) fprintf(stderr,"After  pullup write: %x\n",registers[PA_PULL0_REG]);
 }
 
 // Set the pin as output - LoZ state - PA6 pulls down if set to zero
