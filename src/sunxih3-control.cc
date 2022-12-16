@@ -42,11 +42,11 @@ bool debug = true;
 #define REG_BASE 0x01C20800 - PAGESIZE_CORRECTOR
 
 // Register offsets
-#define PWM_CH_CTRL PWM_OFFSET + 0x0 + PAGESIZE_CORRECTOR
-#define PWM_CH0_PERIOD PWM_OFFSET + 0x04 + PAGESIZE_CORRECTOR
-#define PA_CFG0_REG 0x0 + PAGESIZE_CORRECTOR
-#define PA_PULL0_REG 0x1C + PAGESIZE_CORRECTOR
-#define PA_DATA_REG 0x10 + PAGESIZE_CORRECTOR
+#define PWM_CH_CTRL (PWM_OFFSET + 0x0 + PAGESIZE_CORRECTOR)/sizeof(uint32_t)
+#define PWM_CH0_PERIOD (PWM_OFFSET + 0x04 + PAGESIZE_CORRECTOR)/sizeof(uint32_t)
+#define PA_CFG0_REG (0x0 + PAGESIZE_CORRECTOR)/sizeof(uint32_t)
+#define PA_PULL0_REG (0x1C + PAGESIZE_CORRECTOR)/sizeof(uint32_t)
+#define PA_DATA_REG (0x10 + PAGESIZE_CORRECTOR)/sizeof(uint32_t)
 
 // PA IO configure values
 #define P_OUTPUT 0b001
@@ -108,11 +108,11 @@ void H3BOARD::DisablePaPulls(void) {
   mask = P_PULL_MASK << PA6_PULL_SHIFT | P_PULL_MASK << PA5_PULL_SHIFT;
   value = P_PULL_DISABLE;
 
-  if(debug) fprintf(stderr,"Before pullup write: %x\n",(uint32_t)registers[PA_PULL0_REG]);
+  if(debug) fprintf(stderr,"Before pullup write: %x\n",registers[PA_PULL0_REG]);
   
-   (uint32_t)registers[PA_PULL0_REG] = ((uint32_t)registers[PA_PULL0_REG] & ~mask) | value; 
+   registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | value; 
 
-   if(debug) fprintf(stderr,"After  pullup write: %x\n",(uint32_t)registers[PA_PULL0_REG]);
+   if(debug) fprintf(stderr,"After  pullup write: %x\n",registers[PA_PULL0_REG]);
 }
 
 // Set the pin as output - LoZ state - PA6 pulls down if set to zero
@@ -124,11 +124,11 @@ void H3BOARD::SetOutput(gpio_pin pin) {
   mask = P_MASK << shift;
   value = P_OUTPUT << shift;
 
-  (uint32_t)registers[PA_CFG0_REG] = ((uint32_t)registers[PA_CFG0_REG] & ~mask) | value;
+  registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value;
 
   // Write zero to PA6 to make sure we pull it down
   if (pin == PA6)
-    (uint32_t)registers[PA_DATA_REG] |= 0b1 << 6;
+    registers[PA_DATA_REG] |= 0b1 << 6;
 }
 
 // Set the pin as Input - HiZ state
@@ -140,7 +140,7 @@ void H3BOARD::SetInput(gpio_pin pin) {
   mask = P_MASK << shift;
   value = P_INPUT << shift;
 
-  (uint32_t)registers[PA_CFG0_REG] = ((uint32_t)registers[PA_CFG0_REG] & ~mask) | value; 
+  registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value; 
 }
 
 void H3BOARD::EnableClockOutput(bool enable) {
@@ -151,8 +151,8 @@ void H3BOARD::EnableClockOutput(bool enable) {
     mask = P_MASK << PA5_CFG_SHIFT;
     value = PA5_PWM0 << PA5_CFG_SHIFT;
 
-    (uint32_t)registers[PA_CFG0_REG] = ((uint32_t)registers[PA_CFG0_REG] & ~mask) | value;
-    if(debug) fprintf(stderr,"PA reg config: %x\n",(uint32_t)registers[PA_CFG0_REG]);
+    registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value;
+    if(debug) fprintf(stderr,"PA reg config: %x \n",kx.first,effective_freq);
   } else {
     SetInput(PA5);
   }
@@ -198,20 +198,20 @@ double H3BOARD::StartClock(double requested_freq) {
   if(debug) fprintf(stderr,"Presacale: %d  Period: %d\n",params.prescale,params.period);
   pwm_period = params.period << PWM_CH0_ENTIRE_CYS |
                (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
-  (uint32_t)registers[PWM_CH0_PERIOD] = pwm_period;
+  registers[PWM_CH0_PERIOD] = pwm_period;
 
   if(debug) fprintf(stderr,"Written to Period reg: %x\n",pwm_period);
-  if(debug) fprintf(stderr,"Read from Period reg: %x\n",(uint32_t)registers[PWM_CH0_PERIOD]);
+  if(debug) fprintf(stderr,"Read from Period reg: %x\n",registers[PWM_CH0_PERIOD]);
 
   if(debug) cout << "Period written done\n";
 
   // Setup PWM control register
   pwm_control =   0b1 << PWM_CH0_EN |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
-  (uint32_t)registers[PWM_CH_CTRL] = pwm_control;
+  registers[PWM_CH_CTRL] = pwm_control;
 
   if(debug) fprintf(stderr,"Written to Control reg: %x\n",pwm_control);
-  if(debug) fprintf(stderr,"Read from Control reg: %x\n",(uint32_t)registers[PWM_CH_CTRL]);
+  if(debug) fprintf(stderr,"Read from Control reg: %x\n",registers[PWM_CH_CTRL]);
 
   if(debug) cout << "PWM running done\n";
 
@@ -222,8 +222,8 @@ double H3BOARD::StartClock(double requested_freq) {
 }
 
 void H3BOARD::StopClock() {
-  (uint32_t)registers[PWM_CH_CTRL] = PWM_DEFAULT_OFF;
-  (uint32_t)registers[PWM_CH0_PERIOD] = PWM_DEFAULT_OFF;
+  registers[PWM_CH_CTRL] = PWM_DEFAULT_OFF;
+  registers[PWM_CH0_PERIOD] = PWM_DEFAULT_OFF;
   if(debug) cout << "PWM default in stopclock done\n";
 
   EnableClockOutput(false);
@@ -231,7 +231,7 @@ void H3BOARD::StopClock() {
 
 }
 
-uint8_t *H3BOARD::map_register(off_t address) {
+uint32_t *H3BOARD::map_register(off_t address) {
 
   int mem_fd;
   if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
@@ -239,8 +239,8 @@ uint8_t *H3BOARD::map_register(off_t address) {
     return nullptr;
   }
 
-  uint8_t *result =
-    (uint8_t*) mmap(nullptr,               // Any adddress in our space will do
+  uint32_t *result =
+    (uint32_t*) mmap(nullptr,               // Any adddress in our space will do
                      REGISTER_BLOCK_SIZE,   // Map length
                      PROT_READ|PROT_WRITE,  // Enable r/w on GPIO registers.
                      MAP_SHARED,
@@ -278,9 +278,9 @@ void H3BOARD::SetTxPower(CarrierPower power) {
 
 // Wait until PWM register is not busy
 void H3BOARD::WaitPwmPeriodBusy() {
-  while ((uint32_t)registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY)) {
-     if(debug) fprintf(stderr,"PWM CTRL reg: 0x%x\n",(uint32_t)registers[PWM_CH_CTRL]);   
-     if(debug) fprintf(stderr,"PWM CTRL reg busy: %d\n",(uint32_t)registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY));
+  while (registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY)) {
+     if(debug) fprintf(stderr,"PWM CTRL reg: 0x%x\n",registers[PWM_CH_CTRL]);   
+     if(debug) fprintf(stderr,"PWM CTRL reg busy: %d\n",registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY));
     usleep(5);
   }
 }
