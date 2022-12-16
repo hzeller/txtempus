@@ -201,6 +201,8 @@ double H3BOARD::StartClock(double requested_freq) {
   registers[PWM_CH0_PERIOD] = pwm_period;
 
   if(debug) fprintf(stderr,"Read from PWM Control reg: %x\n",registers[PWM_CTRL_REG]);
+  if(debug) fprintf(stderr,"Read from PWM Period reg: %x\n",registers[PWM_CH0_PERIOD]);
+  
   if(debug) fprintf(stderr,"Written to PWM Period reg: %x\n",pwm_period);
   if(debug) fprintf(stderr,"Read from PWM Period reg: %x\n",registers[PWM_CH0_PERIOD]);
 
