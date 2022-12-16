@@ -107,7 +107,7 @@ void H3BOARD::ConfigurePaPulls(void) {
  
   if(debug) fprintf(stderr,"Before pullup write: %x\n",registers[PA_PULL0_REG]);
   
-  registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | value; 
+  registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask); 
 
   mask = P_PULL_MASK << PA5_PULL_SHIFT;
   registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | mask; 
