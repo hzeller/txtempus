@@ -144,17 +144,14 @@ void H3BOARD::SetInput(gpio_pin pin) {
 }
 
 void H3BOARD::EnableClockOutput(bool enable) {
-  uint32_t mask, value;
+  uint32_t mask;
   assert(registers);  // Call Init() first.
   
   if(enable) {
-    mask = P_MASK << PA5_CFG_SHIFT;
-    value = PA5_PWM0 << PA5_CFG_SHIFT;
-
-    registers[PA_CFG0_REG] = (registers[PA_CFG0_REG] & ~mask) | value;
-    //if(debug) fprintf(stderr,"PA reg config on enable: %x \n",registers[PA_CFG0_REG]);
-  } else {
     SetInput(PA5);
+  } else {
+    mask = 0b1 << SCLK_CH0_GATING;
+    registers[PWM_CTRL_REG] &= ~mask; 
   }
 }
 
@@ -210,7 +207,7 @@ double H3BOARD::StartClock(double requested_freq) {
   if(debug) cout << "Period written done\n";
 
   // Setup PWM control register
-  pwm_control =   0b1 << PWM_CH0_EN |
+  pwm_control =   0b1 << SCLK_CH0_GATING |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
   registers[PWM_CTRL_REG] = pwm_control;
 
@@ -228,7 +225,7 @@ double H3BOARD::StartClock(double requested_freq) {
 void H3BOARD::StopClock() {
   uint32_t pwm_control_mask;
   
-  pwm_control_mask = 0b1 << PWM_CH0_EN;
+  pwm_control_mask = 0b1 << SCLK_CH0_GATING;
 
   registers[PWM_CTRL_REG] &= ~pwm_control_mask;
 
