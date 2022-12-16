@@ -42,7 +42,7 @@ bool debug = true;
 #define REG_BASE 0x01C20800 - PAGESIZE_CORRECTOR
 
 // Register offsets
-#define PWM_CH_CTRL (PWM_OFFSET + 0x0 + PAGESIZE_CORRECTOR)/sizeof(uint32_t)
+#define PWM_CTRL_REG (PWM_OFFSET + 0x0 + PAGESIZE_CORRECTOR)/sizeof(uint32_t)
 #define PWM_CH0_PERIOD (PWM_OFFSET + 0x04 + PAGESIZE_CORRECTOR)/sizeof(uint32_t)
 #define PA_CFG0_REG (0x0 + PAGESIZE_CORRECTOR)/sizeof(uint32_t)
 #define PA_PULL0_REG (0x1C + PAGESIZE_CORRECTOR)/sizeof(uint32_t)
@@ -208,10 +208,10 @@ double H3BOARD::StartClock(double requested_freq) {
   // Setup PWM control register
   pwm_control =   0b1 << PWM_CH0_EN |
                   PwmCh0Prescale[params.prescale] << PWM_CH0_PRESCAL;
-  registers[PWM_CH_CTRL] = pwm_control;
+  registers[PWM_CTRL_REG] = pwm_control;
 
   if(debug) fprintf(stderr,"Written to Control reg: %x\n",pwm_control);
-  if(debug) fprintf(stderr,"Read from Control reg: %x\n",registers[PWM_CH_CTRL]);
+  if(debug) fprintf(stderr,"Read from Control reg: %x\n",registers[PWM_CTRL_REG]);
 
   if(debug) cout << "PWM running done\n";
 
@@ -222,9 +222,11 @@ double H3BOARD::StartClock(double requested_freq) {
 }
 
 void H3BOARD::StopClock() {
-  registers[PWM_CH_CTRL] = PWM_DEFAULT_OFF;
-  registers[PWM_CH0_PERIOD] = PWM_DEFAULT_OFF;
-  if(debug) cout << "PWM default in stopclock done\n";
+  uint32_t pwm_control_mask;
+  
+  pwm_control_mask = 0b1 << PWM_CH0_EN;
+
+  register[PWM_CTRL_REG] &= ~pwm_control_mask;
 
   EnableClockOutput(false);
   if(debug) cout << "Output false in stopclock done\n";
@@ -278,9 +280,9 @@ void H3BOARD::SetTxPower(CarrierPower power) {
 
 // Wait until PWM register is not busy
 void H3BOARD::WaitPwmPeriodBusy() {
-  while (registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY)) {
-  //   if(debug) fprintf(stderr,"PWM CTRL reg: 0x%x\n",registers[PWM_CH_CTRL]);   
-//     if(debug) fprintf(stderr,"PWM CTRL reg busy: %d\n",registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY));
+  while (registers[PWM_CTRL_REG] & (0b1 << PWM0_RDY)) {
+  //   if(debug) fprintf(stderr,"PWM CTRL reg: 0x%x\n",registers[PWM_CTRL_REG]);   
+//     if(debug) fprintf(stderr,"PWM CTRL reg busy: %d\n",registers[PWM_CTRL_REG] & (0b1 << PWM0_RDY));
     usleep(10);
   }
 }
