@@ -53,7 +53,6 @@ bool debug = true;
 #define P_INPUT 0b000
 #define P_MASK 0b111
 #define PA5_PWM0 0b011
-#define P_PULL_DISABLE 0b00
 #define P_PULL_MASK 0b11
 
 // PA shift values
@@ -93,26 +92,27 @@ bool H3BOARD::Init() {
   }
 
   if(registers != MAP_FAILED && registers != MAP_FAILED)
-    DisablePaPulls();
+    ConfigurePaPulls();
   if(debug) cout << "Pullups done\n";
 
   return registers != MAP_FAILED && registers != MAP_FAILED;
 }
 
-// Disable pullups on PA5 and PA6
-// Disabled is the default but let's make sure
-void H3BOARD::DisablePaPulls(void) {
-  uint32_t mask, value;
+// Disable pullups on PA6 and enable it os PA5
+void H3BOARD::ConfigurePaPulls(void) {
+  uint32_t mask;
   assert(registers);  // Call Init() first.
 
-  mask = P_PULL_MASK << PA6_PULL_SHIFT | P_PULL_MASK << PA5_PULL_SHIFT;
-  value = P_PULL_DISABLE;
-
+  mask = P_PULL_MASK << PA6_PULL_SHIFT;
+ 
   if(debug) fprintf(stderr,"Before pullup write: %x\n",registers[PA_PULL0_REG]);
   
-   registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | value; 
+  registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | value; 
 
-   if(debug) fprintf(stderr,"After  pullup write: %x\n",registers[PA_PULL0_REG]);
+  mask = P_PULL_MASK << PA5_PULL_SHIFT;
+  registers[PA_PULL0_REG] = (registers[PA_PULL0_REG] & ~mask) | mask; 
+
+  if(debug) fprintf(stderr,"After  pullup write: %x\n",registers[PA_PULL0_REG]);
 }
 
 // Set the pin as output - LoZ state - PA6 pulls down if set to zero
