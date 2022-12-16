@@ -102,7 +102,7 @@ bool H3BOARD::Init() {
 // Disable pullups on PA5 and PA6
 // Disabled is the default but let's make sure
 void H3BOARD::DisablePaPulls(void) {
-  int mask, value;
+  uint32_t mask, value;
   assert(registers);  // Call Init() first.
 
   mask = P_PULL_MASK << PA6_PULL_SHIFT | P_PULL_MASK << PA5_PULL_SHIFT;
@@ -113,7 +113,7 @@ void H3BOARD::DisablePaPulls(void) {
 
 // Set the pin as output - LoZ state - PA6 pulls down if set to zero
 void H3BOARD::SetOutput(gpio_pin pin) {
-  int shift, mask, value;
+  uint32_t shift, mask, value;
   assert(registers);  // Call Init() first.
 
   shift = pin == PA6 ? PA6_CFG_SHIFT : PA5_CFG_SHIFT;
@@ -129,7 +129,7 @@ void H3BOARD::SetOutput(gpio_pin pin) {
 
 // Set the pin as Input - HiZ state
 void H3BOARD::SetInput(gpio_pin pin) {
-  int shift, mask, value;
+  uint32_t shift, mask, value;
   assert(registers);  // Call Init() first.
 
   shift = pin == PA6 ? PA6_CFG_SHIFT : PA5_CFG_SHIFT;
@@ -140,7 +140,7 @@ void H3BOARD::SetInput(gpio_pin pin) {
 }
 
 void H3BOARD::EnableClockOutput(bool enable) {
-  int mask, value;
+  uint32_t mask, value;
   assert(registers);  // Call Init() first.
   
   if(enable) {
@@ -178,7 +178,7 @@ H3BOARD::pwm_params H3BOARD::CalculatePWMParams(double requested_freq) {
 // Setup the PWM
 double H3BOARD::StartClock(double requested_freq) {
   pwm_params params;
-  int pwm_control, pwm_period;
+  uint32_t pwm_control, pwm_period;
 
   params =  CalculatePWMParams(requested_freq);
   assert(params.prescale != -1);
@@ -195,7 +195,8 @@ double H3BOARD::StartClock(double requested_freq) {
                (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
   registers[PWM_CH0_PERIOD] = pwm_period;
 
-  if(debug) fprintf(stderr,"wrotten to Period reg: %x\n",registers[PWM_CH0_PERIOD]);
+  if(debug) fprintf(stderr,"Written to Period reg: %x\n",pwm_period);
+  if(debug) fprintf(stderr,"Read from Period reg: %x\n",registers[PWM_CH0_PERIOD]);
 
   if(debug) cout << "Period written done\n";
 
