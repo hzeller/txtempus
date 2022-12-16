@@ -270,7 +270,7 @@ void H3BOARD::SetTxPower(CarrierPower power) {
 // Wait until PWM register is not busy
 void H3BOARD::WaitPwmBusy() {
   while (registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY)) {
-   if(debug) fprintf(stderr,"PWM CTRL reg: 0x%lx\n",registers[PWM_CH_CTRL]);   
+   if(debug) fprintf(stderr,"PWM CTRL reg: 0x%x\n",registers[PWM_CH_CTRL]);   
    if(debug) fprintf(stderr,"PWM CTRL reg busy: %d\n",registers[PWM_CH_CTRL] & (0b1 << PWM0_RDY));   
     usleep(5);
   }
