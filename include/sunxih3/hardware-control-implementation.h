@@ -76,9 +76,9 @@ class HardwareControl::Implementation {
       };
   
   // Registers of the board
-  volatile uint32_t *registers = nullptr;
+  volatile uint8_t *registers = nullptr;
   
-  uint32_t *map_register(off_t register_offset);
+  uint8_t *map_register(off_t register_offset);
 
   // Setup pin as output or LOW-Z input
   void SetOutput(gpio_pin pin);
