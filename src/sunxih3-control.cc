@@ -144,7 +144,7 @@ void H3BOARD::SetInput(gpio_pin pin) {
 }
 
 void H3BOARD::EnableClockOutput(bool enable) {
-  uint32_t mask, value;
+  uint32_t mask;
   assert(registers);  // Call Init() first.
   
   if(enable) {
