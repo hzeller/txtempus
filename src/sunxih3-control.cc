@@ -216,8 +216,13 @@ double H3BOARD::StartClock(double requested_freq) {
 
   if(debug) cout << "Period written done\n";
 
-  usleep(50);
+  pwm_control =   0b1 << PWM_CH0_ACT_STA;
+  registers[PWM_CTRL_REG] |= pwm_control;
 
+  usleep(50);
+  registers[PWM_CTRL_REG] &= ~pwm_control;
+
+  usleep(50);
   EnableClockOutput(true);
   if(debug) cout << "Output enabled done\n";
 
