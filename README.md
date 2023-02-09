@@ -118,7 +118,7 @@ These pins vary by the Jetson model. Please check the following table.
 |Devices|PWM pin (Board numbering)|Attenuation pin (Board numbering)|
 |-------|-------------------------|---------------------------------|
 |Jetson TX1, Jetson TX2|Not supported|Not supported|
-|Jetson Xavier, Clara AGX Xavier|18|16|
+|Jetson Xavier, Clara AGX Xavier, Jetson Orin|18|16|
 |Other devices|33|35|
 
 To operate, you need three resistors: 2x4.7kΩ and one 560Ω (precision not
