@@ -47,7 +47,7 @@ class HardwareControl::Implementation {
       std::cerr << "Your model(" << GPIO::model << ") is not supported." << std::endl;
       return false;
     }
-    else if (GPIO::model == "JETSON_XAVIER" || GPIO::model == "CLARA_AGX_XAVIER") {
+    else if (GPIO::model == "JETSON_XAVIER" || GPIO::model == "CLARA_AGX_XAVIER" || GPIO::model == "JETSON_ORIN") {
       // pwm pin : 15, 18
       carrierPin = 18;
       attenuationPin = 16;
