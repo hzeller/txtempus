@@ -9,13 +9,14 @@ ADD_DEFINITIONS(-Wall -O3)
 
 set(CMAKE_INSTALL_PREFIX /usr)
 
-set(SRC_FILES 
+set(SRC_FILES
     src/txtempus.cc
     src/dcf77-source.cc
     src/wwvb-source.cc
     src/jjy-source.cc
     src/msf-source.cc
-    src/hardware-control.cc)
+    src/hardware-control.cc
+    src/user-input.cc)
 
 set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 set(PLATFORM_DEPENDENCIES "")
