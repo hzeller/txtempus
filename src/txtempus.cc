@@ -38,6 +38,7 @@
 
 static bool verbose = false;
 static bool dryrun = false;
+static bool carrier_only = false;
 
 namespace {
 volatile sig_atomic_t interrupted = 0;
@@ -62,6 +63,7 @@ void StartCarrier(HardwareControl *hw, int frequency) {
 
 void SetTxPower(HardwareControl *hw, CarrierPower power) {
   if (dryrun) return;
+  if (carrier_only) power = CarrierPower::HIGH;
   hw->SetTxPower(power);
 }
 
@@ -126,6 +128,7 @@ int usage(const char *msg, const char *progname) {
           "\t-z <minutes>          : Transmit the time offset from local "
           "(default: 0 minutes)\n"
           "\t-v                    : Verbose.\n"
+          "\t-c                    : Carrier wave only.\n"
           "\t-n                    : Dryrun, only showing modulation "
           "envelope.\n"
           "\t-h                    : This help.\n",
@@ -142,7 +145,7 @@ int main(int argc, char *argv[]) {
   int zone_offset = 0;
   int ttl = INT_MAX;
   int opt;
-  while ((opt = getopt(argc, argv, "t:z:r:vs:hn")) != -1) {
+  while ((opt = getopt(argc, argv, "t:z:r:vs:hnc")) != -1) {
     switch (opt) {
     case 'v':
       verbose = true;
@@ -164,6 +167,9 @@ int main(int argc, char *argv[]) {
       dryrun = true;
       verbose = true;
       ttl = 1;
+      break;
+    case 'c':
+      carrier_only = true;
       break;
     default:
       return usage("", argv[0]);
