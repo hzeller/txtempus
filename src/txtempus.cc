@@ -209,6 +209,8 @@ int main(int argc, char *argv[]) {
       WaitUntil(target_wait);
       if (interrupted) break;
 
+      if (verbose) fprintf(stderr, "\b\b\b:%02d", second);
+
       // Depending on the time source, there can be multiple amplitude
       // modulation changes per second.
       for (const ModulationDuration &m : modulation) {
@@ -217,7 +219,6 @@ int main(int argc, char *argv[]) {
         target_wait.tv_nsec += m.duration_ms * 1000000;
         WaitUntil(target_wait);
       }
-      if (verbose) fprintf(stderr, "\b\b\b:%02d", second);
       if (dryrun) PrintModulationChart(modulation);
     }
     if (verbose) fprintf(stderr, "\n");
