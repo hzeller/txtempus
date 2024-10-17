@@ -5,11 +5,12 @@ PROJECT(txtempus
 
 include(GNUInstallDirs)
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 ADD_DEFINITIONS(-Wall -O3)
 
 set(CMAKE_INSTALL_PREFIX /usr)
 
-set(SRC_FILES 
+set(SRC_FILES
     src/txtempus.cc
     src/dcf77-source.cc
     src/wwvb-source.cc
@@ -41,4 +42,3 @@ target_link_libraries(${PROJECT_NAME} ${PLATFORM_DEPENDENCIES})
 
 # install
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-
