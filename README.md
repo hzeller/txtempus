@@ -181,6 +181,7 @@ Options:
         -t 'YYYY-MM-DD HH:MM' : Transmit the given local time (default: now)
         -z <minutes>          : Transmit the time offset from local (default: 0 minutes)
         -v                    : Verbose.
+        -c                    : Carrier wave only.
         -n                    : Dryrun, only showing modulation envelope.
         -h                    : This help.
 ```
