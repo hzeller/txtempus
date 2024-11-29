@@ -16,7 +16,8 @@ set(SRC_FILES
     src/wwvb-source.cc
     src/jjy-source.cc
     src/msf-source.cc
-    src/hardware-control.cc)
+    src/hardware-control.cc
+    src/user-input.cc)
 
 set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 set(PLATFORM_DEPENDENCIES "")
