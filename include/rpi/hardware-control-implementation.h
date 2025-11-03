@@ -18,8 +18,9 @@
 #ifndef RPI_HARDWARE_CONTROL_IMPLEMENTATION_H
 #define RPI_HARDWARE_CONTROL_IMPLEMENTATION_H
 
-#include "hardware-control.h"
 #include <stdint.h>
+
+#include "hardware-control.h"
 
 // -- Implementation for Raspberry Pi Series --
 class HardwareControl::Implementation {
@@ -58,11 +59,11 @@ class HardwareControl::Implementation {
 
  private:
   volatile uint32_t *gpio_port_ = nullptr;
-  volatile uint32_t *gpio_set_bits_= nullptr;
-  volatile uint32_t *gpio_clr_bits_= nullptr;
-  volatile uint32_t *clock_reg_= nullptr;
+  volatile uint32_t *gpio_set_bits_ = nullptr;
+  volatile uint32_t *gpio_clr_bits_ = nullptr;
+  volatile uint32_t *clock_reg_ = nullptr;
 };
 
 using GPIO = HardwareControl::Implementation;
 
-#endif // RPI_HARDWARE_CONTROL_IMPLEMENTATION_H
+#endif  // RPI_HARDWARE_CONTROL_IMPLEMENTATION_H

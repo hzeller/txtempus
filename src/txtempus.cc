@@ -26,12 +26,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <strings.h>
 #include <string.h>
+#include <strings.h>
+#include <time.h>
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "hardware-control.h"
 #include "time-signal-source.h"
@@ -56,8 +56,8 @@ void StartCarrier(HardwareControl *hw, int frequency) {
   if (dryrun) return;
   double f = hw->StartClock(frequency);
   if (verbose) {
-    fprintf(stderr, "Requesting %d Hz, getting %.3f Hz carrier\n",
-            frequency, f);
+    fprintf(stderr, "Requesting %d Hz, getting %.3f Hz carrier\n", frequency,
+            f);
   }
 }
 
@@ -70,8 +70,7 @@ void SetTxPower(HardwareControl *hw, CarrierPower power) {
 time_t ParseLocalTime(const char *time_string) {
   struct tm tm = {};
   const char *final_pos = strptime(time_string, "%Y-%m-%d %H:%M", &tm);
-  if (!final_pos || *final_pos)
-    return 0;
+  if (!final_pos || *final_pos) return 0;
   tm.tm_isdst = -1;
   return mktime(&tm);
 }
@@ -95,10 +94,10 @@ void PrintModulationChart(const TimeSignalSource::SecondModulation &mod) {
     power = (m.power == CarrierPower::HIGH);
     target_ms += m.duration_ms;
     for (/**/; running_ms < target_ms; running_ms += kMsPerDash)
-      fprintf(stderr, "%s", power ? "#":"_");
+      fprintf(stderr, "%s", power ? "#" : "_");
   }
   for (/**/; running_ms < 1000; running_ms += kMsPerDash)
-    fprintf(stderr, "%s", power ? "#":"_");
+    fprintf(stderr, "%s", power ? "#" : "_");
   fprintf(stderr, "]\n");
 }
 
@@ -111,13 +110,13 @@ std::unique_ptr<TimeSignalSource> CreateTimeSourceFromName(const char *n) {
     return std::make_unique<JJY40TimeSignalSource>();
   if (strcasecmp(n, "JJY60") == 0)
     return std::make_unique<JJY60TimeSignalSource>();
-  if (strcasecmp(n, "MSF") == 0)
-    return std::make_unique<MSFTimeSignalSource>();
+  if (strcasecmp(n, "MSF") == 0) return std::make_unique<MSFTimeSignalSource>();
   return nullptr;
 }
 
 int usage(const char *msg, const char *progname) {
-  fprintf(stderr, "%susage: %s [options]\n"
+  fprintf(stderr,
+          "%susage: %s [options]\n"
           "Options:\n"
           "\t-s <service>          : Service; one of "
           "'DCF77', 'WWVB', 'JJY40', 'JJY60', 'MSF'\n"
@@ -147,32 +146,32 @@ int main(int argc, char *argv[]) {
   int opt;
   while ((opt = getopt(argc, argv, "t:z:r:vs:hnc")) != -1) {
     switch (opt) {
-    case 'v':
-      verbose = true;
-      break;
-    case 't':
-      chosen_time = ParseLocalTime(optarg);
-      if (chosen_time <= 0) return usage("Invalid time string\n", argv[0]);
-      break;
-    case 'z':
-      zone_offset = atoi(optarg);
-      break;
-    case 'r':
-      ttl = atoi(optarg);
-      break;
-    case 's':
-      time_source = CreateTimeSourceFromName(optarg);
-      break;
-    case 'n':
-      dryrun = true;
-      verbose = true;
-      ttl = 1;
-      break;
-    case 'c':
-      carrier_only = true;
-      break;
-    default:
-      return usage("", argv[0]);
+      case 'v':
+        verbose = true;
+        break;
+      case 't':
+        chosen_time = ParseLocalTime(optarg);
+        if (chosen_time <= 0) return usage("Invalid time string\n", argv[0]);
+        break;
+      case 'z':
+        zone_offset = atoi(optarg);
+        break;
+      case 'r':
+        ttl = atoi(optarg);
+        break;
+      case 's':
+        time_source = CreateTimeSourceFromName(optarg);
+        break;
+      case 'n':
+        dryrun = true;
+        verbose = true;
+        ttl = 1;
+        break;
+      case 'c':
+        carrier_only = true;
+        break;
+      default:
+        return usage("", argv[0]);
     }
   }
 
@@ -206,8 +205,8 @@ int main(int argc, char *argv[]) {
     time_source->PrepareMinute(transmit_time);
 
     for (int second = 0; second < 60 && !interrupted; ++second) {
-      const TimeSignalSource::SecondModulation &modulation
-        = time_source->GetModulationForSecond(second);
+      const TimeSignalSource::SecondModulation &modulation =
+          time_source->GetModulationForSecond(second);
 
       // First, let's wait until we reach the beginning of that second
       target_wait.tv_sec = minute_start + second;
@@ -221,7 +220,7 @@ int main(int argc, char *argv[]) {
       // modulation changes per second.
       for (const ModulationDuration &m : modulation) {
         SetTxPower(&hw, m.power);
-        if (m.duration_ms == 0) break; // last one.
+        if (m.duration_ms == 0) break;  // last one.
         target_wait.tv_nsec += m.duration_ms * 1000000;
         WaitUntil(target_wait);
       }

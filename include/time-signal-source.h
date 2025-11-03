@@ -18,9 +18,11 @@
 #ifndef TIMETRANSMITTER_CLOCKGEN_H
 #define TIMETRANSMITTER_CLOCKGEN_H
 
-#include <time.h>
 #include <stdint.h>
+#include <time.h>
+
 #include <vector>
+
 #include "carrier-power.h"
 
 struct ModulationDuration {
@@ -30,10 +32,10 @@ struct ModulationDuration {
 
 // Base class for different types of time signal sources.
 class TimeSignalSource {
-public:
+ public:
   typedef std::vector<ModulationDuration> SecondModulation;
 
-  virtual ~TimeSignalSource(){}
+  virtual ~TimeSignalSource() {}
 
   // Carrier frequency of this particular time source.
   virtual int GetCarrierFrequencyHz() const = 0;
@@ -61,34 +63,33 @@ public:
   virtual SecondModulation GetModulationForSecond(int second) = 0;
 };
 
-
 // -- Various implementations.
 class DCF77TimeSignalSource : public TimeSignalSource {
-public:
+ public:
   int GetCarrierFrequencyHz() const final { return 77500; }
   void PrepareMinute(time_t t) final;
   SecondModulation GetModulationForSecond(int second) final;
 
-private:
+ private:
   uint64_t time_bits_;
 };
 
 class WWVBTimeSignalSource : public TimeSignalSource {
-public:
+ public:
   int GetCarrierFrequencyHz() const final { return 60000; }
   void PrepareMinute(time_t t) final;
   SecondModulation GetModulationForSecond(int second) final;
 
-private:
+ private:
   uint64_t time_bits_;
 };
 
 class JJYTimeSignalSource : public TimeSignalSource {
-public:
+ public:
   void PrepareMinute(time_t t) final;
   SecondModulation GetModulationForSecond(int second) final;
 
-private:
+ private:
   uint64_t time_bits_;
 };
 
@@ -100,13 +101,13 @@ class JJY40TimeSignalSource : public JJYTimeSignalSource {
 };
 
 class MSFTimeSignalSource : public TimeSignalSource {
-public:
+ public:
   int GetCarrierFrequencyHz() const final { return 60000; }
   void PrepareMinute(time_t t) final;
   SecondModulation GetModulationForSecond(int second) final;
 
-private:
+ private:
   uint64_t a_bits_, b_bits_;
 };
 
-#endif // TIMETRANSMITTER_CLOCKGEN_H
+#endif  // TIMETRANSMITTER_CLOCKGEN_H

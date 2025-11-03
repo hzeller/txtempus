@@ -37,8 +37,8 @@ void DCF77TimeSignalSource::PrepareMinute(time_t t) {
   time_bits_ = 0;
   time_bits_ |= (breakdown.tm_isdst ? 1 : 0) << 17;
   time_bits_ |= (breakdown.tm_isdst ? 0 : 1) << 18;
-  time_bits_ |= (1<<20);  // start time bit.
-  time_bits_ |= to_bcd(breakdown.tm_min)  << 21;
+  time_bits_ |= (1 << 20);  // start time bit.
+  time_bits_ |= to_bcd(breakdown.tm_min) << 21;
   time_bits_ |= to_bcd(breakdown.tm_hour) << 29;
   time_bits_ |= to_bcd(breakdown.tm_mday) << 36;
   time_bits_ |= to_bcd(breakdown.tm_wday ? breakdown.tm_wday : 7) << 42;
@@ -52,8 +52,7 @@ void DCF77TimeSignalSource::PrepareMinute(time_t t) {
 
 TimeSignalSource::SecondModulation
 DCF77TimeSignalSource::GetModulationForSecond(int second) {
-  if (second >= 59)
-    return {{CarrierPower::HIGH, 0}};  // Synchronization
+  if (second >= 59) return {{CarrierPower::HIGH, 0}};  // Synchronization
   const bool bit = time_bits_ & (1LL << second);
   return {{CarrierPower::LOW, bit ? 200 : 100}, {CarrierPower::HIGH, 0}};
 }

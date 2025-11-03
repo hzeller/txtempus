@@ -20,20 +20,23 @@
 #define HARDWARE_CONTROL_H
 
 #include <memory>
+
 #include "carrier-power.h"
 
 class HardwareControl {
  public:
-  // To add a new platform support: 
-  // 1. Add include/[new_platform_name]/hardware-control-implementation.h file and
+  // To add a new platform support:
+  // 1. Add include/[new_platform_name]/hardware-control-implementation.h file
+  // and
   //    implement "HardwareControl::Implementation" class for the platform.
-  // 2. Add cmake/[new_platform_name]-control.cmake file and set platform-specific configuration:
+  // 2. Add cmake/[new_platform_name]-control.cmake file and set
+  // platform-specific configuration:
   //    SRC_FILES: source files
   //    INCLUDE_DIRS: include directories
-  //    PLATFORM_DEPENDENCIES: dependencies 
+  //    PLATFORM_DEPENDENCIES: dependencies
   // 3. Append [new_platform_name] to "SUPPORTED_PLATFORMS" in CMakeLists.txt.
   class Implementation;
-  
+
   HardwareControl();
   ~HardwareControl();
 

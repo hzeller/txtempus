@@ -50,15 +50,15 @@ void JJYTimeSignalSource::PrepareMinute(time_t t) {
   time_bits_ |= to_bcd(breakdown.tm_year % 100) << (59 - 48);
   time_bits_ |= to_bcd(breakdown.tm_wday) << (59 - 52);
 
-  time_bits_ |= parity(time_bits_, 59-18, 59-12) << (59 - 36);  // PA1
-  time_bits_ |= parity(time_bits_, 59-8, 59-1) << (59 - 37);    // PA2
+  time_bits_ |= parity(time_bits_, 59 - 18, 59 - 12) << (59 - 36);  // PA1
+  time_bits_ |= parity(time_bits_, 59 - 8, 59 - 1) << (59 - 37);    // PA2
 
   // There is a different 'service announcement' encoding in minute 15 and 45,
   // but let's just ignore that for now. Consumer clocks probably don't care.
 }
 
-TimeSignalSource::SecondModulation
-JJYTimeSignalSource::GetModulationForSecond(int sec) {
+TimeSignalSource::SecondModulation JJYTimeSignalSource::GetModulationForSecond(
+    int sec) {
   if (sec == 0 || sec % 10 == 9 || sec > 59)
     return {{CarrierPower::HIGH, 200}, {CarrierPower::LOW, 0}};
   const bool bit = time_bits_ & (1LL << (59 - sec));

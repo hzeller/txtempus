@@ -21,9 +21,11 @@
 
 #define __STDC_FORMAT_MACROS
 
-#include "hardware-control.h"
-#include <iostream>
 #include <JetsonGPIO.h>
+
+#include <iostream>
+
+#include "hardware-control.h"
 
 // -- Implementation for Nvidia Jetson Series --
 
@@ -37,22 +39,22 @@ class HardwareControl::Implementation {
 
  public:
   bool Init() {
-    if (isInitialized)
-      return carrierPin > 0;
+    if (isInitialized) return carrierPin > 0;
 
     isInitialized = true;
 
     if (GPIO::model == "JETSON_TX1" || GPIO::model == "JETSON_TX2") {
       // cannot control pwm through JetsonGPIO library
-      std::cerr << "Your model(" << GPIO::model << ") is not supported." << std::endl;
+      std::cerr << "Your model(" << GPIO::model << ") is not supported."
+                << std::endl;
       return false;
-    }
-    else if (GPIO::model == "JETSON_XAVIER" || GPIO::model == "CLARA_AGX_XAVIER" || GPIO::model == "JETSON_ORIN") {
+    } else if (GPIO::model == "JETSON_XAVIER" ||
+               GPIO::model == "CLARA_AGX_XAVIER" ||
+               GPIO::model == "JETSON_ORIN") {
       // pwm pin : 15, 18
       carrierPin = 18;
       attenuationPin = 16;
-    }
-    else {
+    } else {
       // pwm pin : 32, 33
       carrierPin = 33;
       attenuationPin = 35;
@@ -65,12 +67,12 @@ class HardwareControl::Implementation {
     return true;
   }
 
-
   double StartClock(double frequency_hertz) {
     if (pwm == nullptr)
-      pwm = std::unique_ptr<GPIO::PWM>(new GPIO::PWM(carrierPin, frequency_hertz));
+      pwm = std::unique_ptr<GPIO::PWM>(
+          new GPIO::PWM(carrierPin, frequency_hertz));
 
-    pwm->start(50.0); // duty cycle: 50%
+    pwm->start(50.0);  // duty cycle: 50%
     isOn = true;
 
     return frequency_hertz;
@@ -84,42 +86,35 @@ class HardwareControl::Implementation {
   }
 
   void EnableClockOutput(bool on) {
-    if(on == isOn)
-      return;
+    if (on == isOn) return;
 
     if (on) {
       pwm->start(50.0);
       isOn = true;
-    }
-    else {
+    } else {
       StopClock();
     }
   }
 
   void SetTxPower(CarrierPower power) {
     switch (power) {
-    case CarrierPower::LOW:
-      EnableClockOutput(true);
-      ApplyAttenuation();
-      break;
-    case CarrierPower::OFF:
-      EnableClockOutput(false);
-      break;
-    case CarrierPower::HIGH:
-      EnableClockOutput(true);
-      StopAttenuation();
-      break;
+      case CarrierPower::LOW:
+        EnableClockOutput(true);
+        ApplyAttenuation();
+        break;
+      case CarrierPower::OFF:
+        EnableClockOutput(false);
+        break;
+      case CarrierPower::HIGH:
+        EnableClockOutput(true);
+        StopAttenuation();
+        break;
     }
   }
 
-  void ApplyAttenuation() {
-    GPIO::output(attenuationPin, GPIO::HIGH);
-  }
+  void ApplyAttenuation() { GPIO::output(attenuationPin, GPIO::HIGH); }
 
-  void StopAttenuation() {
-    GPIO::output(attenuationPin, GPIO::LOW);
-  }
+  void StopAttenuation() { GPIO::output(attenuationPin, GPIO::LOW); }
 };
 
-
-#endif // JETSON_HARDWARE_CONTROL_IMPLEMENTATION_H
+#endif  // JETSON_HARDWARE_CONTROL_IMPLEMENTATION_H

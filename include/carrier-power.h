@@ -18,8 +18,6 @@
 #ifndef CARRIER_POWER_H
 #define CARRIER_POWER_H
 
-enum class CarrierPower {
-  OFF, LOW, HIGH
-};
+enum class CarrierPower { OFF, LOW, HIGH };
 
-#endif // CARRIER_POWER_H
+#endif  // CARRIER_POWER_H

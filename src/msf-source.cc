@@ -35,7 +35,8 @@ void MSFTimeSignalSource::PrepareMinute(time_t t) {
   // The MSF format uses Bit-Bigendianess, so we'll start with the first
   // bit left in our integer in bit 59.
 
-  a_bits_ = 0b1111110; // Last bits of a, identifying upcoming minute transition
+  a_bits_ =
+      0b1111110;  // Last bits of a, identifying upcoming minute transition
   a_bits_ |= to_bcd(breakdown.tm_year % 100) << (59 - 24);
   a_bits_ |= to_bcd(breakdown.tm_mon + 1) << (59 - 29);
   a_bits_ |= to_bcd(breakdown.tm_mday) << (59 - 35);
@@ -46,22 +47,21 @@ void MSFTimeSignalSource::PrepareMinute(time_t t) {
   b_bits_ = 0;
   // First couple of bits: DUT; not being set.
   // (59 - 53): summer time warning. Not set.
-  b_bits_ |= odd_parity(a_bits_, 59-24, 59-17) << (59 - 54); // Year parity
-  b_bits_ |= odd_parity(a_bits_, 59-35, 59-25) << (59 - 55); // Day parity
-  b_bits_ |= odd_parity(a_bits_, 59-38, 59-36) << (59 - 56); // Weekday parity
-  b_bits_ |= odd_parity(a_bits_, 59-51, 59-39) << (59 - 57); // Time parity
+  b_bits_ |= odd_parity(a_bits_, 59 - 24, 59 - 17) << (59 - 54);  // Year parity
+  b_bits_ |= odd_parity(a_bits_, 59 - 35, 59 - 25) << (59 - 55);  // Day parity
+  b_bits_ |= odd_parity(a_bits_, 59 - 38, 59 - 36)
+             << (59 - 56);  // Weekday parity
+  b_bits_ |= odd_parity(a_bits_, 59 - 51, 59 - 39) << (59 - 57);  // Time parity
   b_bits_ |= breakdown.tm_isdst << (59 - 58);
 }
 
-TimeSignalSource::SecondModulation
-MSFTimeSignalSource::GetModulationForSecond(int second) {
-  if (second == 0)
-    return {{CarrierPower::OFF, 500}, {CarrierPower::HIGH, 0}};
+TimeSignalSource::SecondModulation MSFTimeSignalSource::GetModulationForSecond(
+    int second) {
+  if (second == 0) return {{CarrierPower::OFF, 500}, {CarrierPower::HIGH, 0}};
   const bool a = a_bits_ & (1LL << (59 - second));
   const bool b = b_bits_ & (1LL << (59 - second));
-  return { { CarrierPower::OFF, 100 },
-           { a ? CarrierPower::OFF : CarrierPower::HIGH, 100 },
-           { b ? CarrierPower::OFF : CarrierPower::HIGH, 100 },
-           { CarrierPower::HIGH, 0}
-         };
+  return {{CarrierPower::OFF, 100},
+          {a ? CarrierPower::OFF : CarrierPower::HIGH, 100},
+          {b ? CarrierPower::OFF : CarrierPower::HIGH, 100},
+          {CarrierPower::HIGH, 0}};
 }

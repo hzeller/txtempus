@@ -49,8 +49,8 @@ void WWVBTimeSignalSource::PrepareMinute(time_t t) {
   time_bits_ |= (breakdown.tm_isdst ? 1 : 0) << (59 - 58);
 }
 
-TimeSignalSource::SecondModulation
-WWVBTimeSignalSource::GetModulationForSecond(int sec) {
+TimeSignalSource::SecondModulation WWVBTimeSignalSource::GetModulationForSecond(
+    int sec) {
   if (sec == 0 || sec % 10 == 9 || sec > 59)
     return {{CarrierPower::LOW, 800}, {CarrierPower::HIGH, 0}};
   const bool bit = time_bits_ & (1LL << (59 - sec));
