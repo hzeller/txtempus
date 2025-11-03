@@ -18,9 +18,8 @@
 #ifndef TIMETRANSMITTER_CLOCKGEN_H
 #define TIMETRANSMITTER_CLOCKGEN_H
 
-#include <stdint.h>
-#include <time.h>
-
+#include <cstdint>
+#include <ctime>
 #include <vector>
 
 #include "carrier-power.h"
@@ -33,9 +32,9 @@ struct ModulationDuration {
 // Base class for different types of time signal sources.
 class TimeSignalSource {
  public:
-  typedef std::vector<ModulationDuration> SecondModulation;
+  using SecondModulation = std::vector<ModulationDuration>;
 
-  virtual ~TimeSignalSource() {}
+  virtual ~TimeSignalSource() = default;
 
   // Carrier frequency of this particular time source.
   virtual int GetCarrierFrequencyHz() const = 0;

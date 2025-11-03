@@ -108,23 +108,29 @@ void PrintModulationChart(const TimeSignalSource::SecondModulation &mod) {
   for (const ModulationDuration &m : mod) {
     power = (m.power == CarrierPower::HIGH);
     target_ms += m.duration_ms;
-    for (/**/; running_ms < target_ms; running_ms += kMsPerDash)
+    for (/**/; running_ms < target_ms; running_ms += kMsPerDash) {
       fprintf(stderr, "%s", power ? "#" : "_");
+    }
   }
-  for (/**/; running_ms < 1000; running_ms += kMsPerDash)
+  for (/**/; running_ms < 1000; running_ms += kMsPerDash) {
     fprintf(stderr, "%s", power ? "#" : "_");
+  }
   fprintf(stderr, "]\n");
 }
 
 std::unique_ptr<TimeSignalSource> CreateTimeSourceFromName(const char *n) {
-  if (strcasecmp(n, "DCF77") == 0)
+  if (strcasecmp(n, "DCF77") == 0) {
     return std::make_unique<DCF77TimeSignalSource>();
-  if (strcasecmp(n, "WWVB") == 0)
+  }
+  if (strcasecmp(n, "WWVB") == 0) {
     return std::make_unique<WWVBTimeSignalSource>();
-  if (strcasecmp(n, "JJY40") == 0)
+  }
+  if (strcasecmp(n, "JJY40") == 0) {
     return std::make_unique<JJY40TimeSignalSource>();
-  if (strcasecmp(n, "JJY60") == 0)
+  }
+  if (strcasecmp(n, "JJY60") == 0) {
     return std::make_unique<JJY60TimeSignalSource>();
+  }
   if (strcasecmp(n, "MSF") == 0) return std::make_unique<MSFTimeSignalSource>();
   return nullptr;
 }
@@ -153,7 +159,7 @@ int usage(const char *msg, const char *progname) {
 }  // end anonymous namespace
 
 int main(int argc, char *argv[]) {
-  const time_t now = TruncateTo(time(NULL), 60);  // Time signals: full minute
+  const time_t now = TruncateTo(time(nullptr), 60);  // Time: full minute
   std::unique_ptr<TimeSignalSource> time_source{};
   time_t chosen_time = now;
   int zone_offset = 0;
@@ -190,11 +196,12 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  chosen_time += zone_offset * 60;
+  chosen_time += zone_offset * (time_t)60;
   const int time_offset = chosen_time - now;
 
-  if (!time_source)
+  if (!time_source) {
     return usage("Please choose a service name with -s option\n", argv[0]);
+  }
 
   HardwareControl hw{};
   if (!dryrun && !hw.Init()) {

@@ -64,7 +64,7 @@ static constexpr bool kDebug = false;
 #define PA5_PULL_SHIFT 10  // Bits [2i+1:2i] (i=0~15)
 
 // Amount of memory to map after registers to access all offsets
-#define REGISTER_BLOCK_SIZE 2 * 4096 * sizeof(uint32_t)
+#define REGISTER_BLOCK_SIZE ((size_t)2 * 4096 * sizeof(uint32_t))
 
 // PWM Base frequency - 24MHz
 #define PWM_BASE_FREQUENCY 24e6
@@ -194,9 +194,10 @@ double H3BOARD::StartClock(double requested_freq) {
   WaitPwmPeriodReady();
 
   // Setup PWM period to 50% duty cycle
-  if (kDebug)
+  if (kDebug) {
     fprintf(stderr, "Presacale: %d  Period: %d\n", params.prescale,
             params.period);
+  }
   pwm_period = params.period << PWM_CH0_ENTIRE_CYS |
                (params.period / 2) << PWM_CH0_ENTIRE_ACT_CYS;
   registers[PWM_CH0_PERIOD] = pwm_period;
@@ -224,7 +225,7 @@ void H3BOARD::StopClock() {
 
 uint32_t *H3BOARD::map_register(off_t register_offset) {
   int mem_fd;
-  if ((mem_fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
+  if (mem_fd = open("/dev/mem", O_RDWR | O_SYNC); mem_fd < 0) {
     perror("can't open /dev/mem: ");
     return nullptr;
   }

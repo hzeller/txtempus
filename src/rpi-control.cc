@@ -46,7 +46,7 @@
 #define GPIO_REGISTER_OFFSET 0x00200000
 #define CLOCK_REGISTER_OFFSET 0x00101000
 
-#define REGISTER_BLOCK_SIZE (4 * 1024)
+#define REGISTER_BLOCK_SIZE (4 * (size_t)1024)
 
 // GPIO setup macros. Always use INP_GPIO(x) before using OUT_GPIO(x).
 #define INP_GPIO(g) *(gpio_port_ + ((g) / 10)) &= ~(7 << (((g) % 10) * 3))
@@ -220,7 +220,7 @@ static RaspberryPiModel DetermineRaspberryModel() {
   }
   static const char RevisionTag[] = "Revision";
   const char *revision_key;
-  if ((revision_key = strstr(buffer, RevisionTag)) == nullptr) {
+  if (revision_key = strstr(buffer, RevisionTag); revision_key == nullptr) {
     fprintf(stderr, "non-existent Revision: Could not determine Pi model\n");
     return PI_MODEL_3;
   }
@@ -282,7 +282,7 @@ static uint32_t *mmap_bcm_register(off_t register_offset) {
   }
 
   int mem_fd;
-  if ((mem_fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
+  if (mem_fd = open("/dev/mem", O_RDWR | O_SYNC); mem_fd < 0) {
     perror("can't open /dev/mem: ");
     return nullptr;
   }

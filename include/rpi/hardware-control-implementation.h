@@ -43,10 +43,10 @@ class HardwareControl::Implementation {
   uint32_t RequestInput(uint32_t inputs);
 
   // Set the bits that are '1' in the output. Leave the rest untouched.
-  inline void SetBits(uint32_t value) { *gpio_set_bits_ = value; }
+  void SetBits(uint32_t value) { *gpio_set_bits_ = value; }
 
   // Clear the bits that are '1' in the output. Leave the rest untouched.
-  inline void ClearBits(uint32_t value) { *gpio_clr_bits_ = value; }
+  void ClearBits(uint32_t value) { *gpio_clr_bits_ = value; }
 
   // Set frequency output on GPIO4 as close as possible to the requested one.
   // Returns the approximate frequency it could configure or -1 if that was
