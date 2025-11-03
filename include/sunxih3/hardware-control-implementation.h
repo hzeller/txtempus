@@ -18,11 +18,12 @@
 #ifndef SUNXIH3_HARDWARE_CONTROL_IMPLEMENTATION_H
 #define SUNXIH3_HARDWARE_CONTROL_IMPLEMENTATION_H
 
-#include <stdint.h>
-#include <stdio.h>
+#include <stdio.h>  // NOLINT(modernize-deprecated-headers) off_t only there
 
+#include <cstdint>
 #include <map>
 
+#include "carrier-power.h"
 #include "hardware-control.h"
 
 // -- Implementation for Allwinner H3 SOC --
@@ -82,7 +83,7 @@ class HardwareControl::Implementation {
   void SetInput(gpio_pin pin);
 
   // Configure pins
-  void ConfigurePins(void);
+  void ConfigurePins();
 
   // Calculate PWM parameters based on requested output frequency
   pwm_params CalculatePWMParams(double requested_freq);

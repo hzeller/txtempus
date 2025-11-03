@@ -15,24 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <assert.h>
 #include <fcntl.h>
-#include <inttypes.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h>  // NOLINT(modernize-deprecated-headers) off_t only there
 #include <sys/mman.h>
-#include <time.h>
 #include <unistd.h>
 
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
 #include <iostream>
 
-#include "hardware-control-implementation.h"
+#include "carrier-power.h"
 #include "hardware-control.h"
-using namespace std;
+#include "sunxih3/hardware-control-implementation.h"
 
-bool debug = false;
+static constexpr bool kDebug = false;
 
 // -- Implementation for Allwinner H3 boards --
 
@@ -81,7 +79,7 @@ bool H3BOARD::Init() {
                     {48000, 0b1011}, {72000, 0b1100}, {1, 0b1111}};
 
   registers = map_register(REG_BASE);
-  if (debug) cout << "Mapped\n";
+  if (kDebug) std::cerr << "Mapped\n";
 
   if (registers == nullptr || registers == nullptr) {
     fprintf(stderr, "Need to be root\n");
@@ -89,13 +87,13 @@ bool H3BOARD::Init() {
   }
 
   if (registers != MAP_FAILED && registers != MAP_FAILED) ConfigurePins();
-  if (debug) cout << "Pin configs done\n";
+  if (kDebug) std::cerr << "Pin configs done\n";
 
   return registers != MAP_FAILED && registers != MAP_FAILED;
 }
 
 // Disable pullups on PA6 and enable it os PA5
-void H3BOARD::ConfigurePins(void) {
+void H3BOARD::ConfigurePins() {
   uint32_t mask, value;
   assert(registers);  // Call Init() first.
 
@@ -163,9 +161,10 @@ H3BOARD::pwm_params H3BOARD::CalculatePWMParams(double requested_freq) {
   for (const auto &kx : PwmCh0Prescale) {
     clk_freq = (unsigned int)PWM_BASE_FREQUENCY / kx.first;
     cycles = round((clk_freq / requested_freq)) - 1;
-    effective_freq = (unsigned int)clk_freq / (cycles + 1);
-    if (debug)
+    effective_freq = clk_freq / (cycles + 1);
+    if (kDebug) {
       fprintf(stderr, "Prescale: %d  Freq: %d\n", kx.first, effective_freq);
+    }
     if (error > fabs(requested_freq - effective_freq) && cycles > 1 &&
         cycles < 65536) {
       params.prescale = kx.first;
@@ -185,7 +184,7 @@ double H3BOARD::StartClock(double requested_freq) {
   // Get PWM parameters for the requested frequency
   params = CalculatePWMParams(requested_freq);
   assert(params.prescale != -1);
-  if (debug) cout << "Frequency calculations done\n";
+  if (kDebug) std::cerr << "Frequency calculations done\n";
 
   // Start Gating clock
   pwm_control = 0b1 << SCLK_CH0_GATING | PwmCh0Prescale[params.prescale]
@@ -195,7 +194,7 @@ double H3BOARD::StartClock(double requested_freq) {
   WaitPwmPeriodReady();
 
   // Setup PWM period to 50% duty cycle
-  if (debug)
+  if (kDebug)
     fprintf(stderr, "Presacale: %d  Period: %d\n", params.prescale,
             params.period);
   pwm_period = params.period << PWM_CH0_ENTIRE_CYS |
@@ -204,7 +203,7 @@ double H3BOARD::StartClock(double requested_freq) {
 
   usleep(50);
   EnableClockOutput(true);
-  if (debug) cout << "Output enabled\n";
+  if (kDebug) std::cerr << "Output enabled\n";
 
   return params.frequency;
 }
@@ -220,10 +219,10 @@ void H3BOARD::StopClock() {
   pwm_control_mask = 0b1 << SCLK_CH0_GATING;
   registers[PWM_CTRL_REG] &= ~pwm_control_mask;
 
-  if (debug) cout << "Clock stopped\n";
+  if (kDebug) std::cerr << "Clock stopped\n";
 }
 
-uint32_t *H3BOARD::map_register(off_t address) {
+uint32_t *H3BOARD::map_register(off_t register_offset) {
   int mem_fd;
   if ((mem_fd = open("/dev/mem", O_RDWR | O_SYNC)) < 0) {
     perror("can't open /dev/mem: ");
@@ -235,14 +234,14 @@ uint32_t *H3BOARD::map_register(off_t address) {
       REGISTER_BLOCK_SIZE,     // Map length
       PROT_READ | PROT_WRITE,  // Enable r/w on registers.
       MAP_SHARED,
-      mem_fd,  // File to map
-      address  // Memory address before registers at a page boundary
+      mem_fd,          // File to map
+      register_offset  // Memory address before registers at a page boundary
   );
   close(mem_fd);
 
   if (result == MAP_FAILED) {
     perror("mmap error: ");
-    fprintf(stderr, "MMapping to address 0x%lx\n", address);
+    fprintf(stderr, "MMapping to address 0x%lx\n", register_offset);
     return nullptr;
   }
   return result;
@@ -266,6 +265,6 @@ void H3BOARD::SetTxPower(CarrierPower power) {
 
 // Wait until PWM register is not busy
 void H3BOARD::WaitPwmPeriodReady() {
-  if (debug) cout << "Waiting for PWM period register availability\n";
+  if (kDebug) std::cerr << "Waiting for PWM period register availability\n";
   while (registers[PWM_CTRL_REG] & (0b1 << PWM0_RDY)) usleep(10);
 }

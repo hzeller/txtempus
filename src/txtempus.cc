@@ -19,20 +19,32 @@
 // as DCF77, WWVB, ... to be run on the Raspberry Pi.
 // Make sure to stay within the regulation limits of HF transmissions!
 
-#include <getopt.h>
-#include <limits.h>
+#define _XOPEN_SOURCE
+
 #include <sched.h>
-#include <signal.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <strings.h>
-#include <time.h>
+#include <time.h>  // NOLINT(modernize-deprecated-headers) for clock_nanosleep
+
+#include <climits>
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+// The following is to work around clang-tidy being confused and not
+// understanding that unistd.h indeed provides getopt(). So let's include
+// unistd.h for correctness, and then soothe clang-tidy with decls.
+// TODO: how make it just work with including unistd.h ?
+#include <unistd.h>                            // NOLINT
+extern "C" {                                   //
+extern char *optarg;                           // NOLINT
+extern int optind;                             // NOLINT
+int getopt(int, char *const *, const char *);  // NOLINT
+}
 
 #include <memory>
-#include <string>
 
+#include "carrier-power.h"
 #include "hardware-control.h"
 #include "time-signal-source.h"
 
@@ -42,14 +54,17 @@ static bool carrier_only = false;
 
 namespace {
 volatile sig_atomic_t interrupted = 0;
+extern "C" {
 void InterruptHandler(int signo) { interrupted = signo; }
+}
 
 // Truncate "t" so that it is multiple of "d"
 time_t TruncateTo(time_t t, int d) { return t - t % d; }
 
 void WaitUntil(const struct timespec &ts) {
   if (dryrun) return;
-  clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, NULL);
+  // NOLINTNEXTLINE(misc-include-cleaner) macros should be defined by time.h
+  clock_nanosleep(CLOCK_REALTIME, TIMER_ABSTIME, &ts, nullptr);
 }
 
 void StartCarrier(HardwareControl *hw, int frequency) {
@@ -191,7 +206,7 @@ int main(int argc, char *argv[]) {
   signal(SIGINT, InterruptHandler);
 
   // Make sure the kernel knows that we're serious about accuracy of sleeps.
-  struct sched_param sp;
+  struct sched_param sp;  // NOLINT(misc-include-cleaner) is in sched.h
   sp.sched_priority = 99;
   sched_setscheduler(0, SCHED_FIFO, &sp);
 
@@ -221,7 +236,7 @@ int main(int argc, char *argv[]) {
       for (const ModulationDuration &m : modulation) {
         SetTxPower(&hw, m.power);
         if (m.duration_ms == 0) break;  // last one.
-        target_wait.tv_nsec += m.duration_ms * 1000000;
+        target_wait.tv_nsec += m.duration_ms * 1000000L;
         WaitUntil(target_wait);
       }
       if (dryrun) PrintModulationChart(modulation);

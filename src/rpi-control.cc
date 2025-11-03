@@ -15,19 +15,25 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "rpi/hardware-control-implementation.h"
+
 #define __STDC_FORMAT_MACROS
-#include <assert.h>
 #include <fcntl.h>
-#include <inttypes.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <strings.h>
 #include <sys/mman.h>
-#include <time.h>
+#include <sys/types.h>
 #include <unistd.h>
 
-#include "hardware-control-implementation.h"
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+
+#include "carrier-power.h"
 #include "hardware-control.h"
 
 // -- Implementation for Raspberry Pi Series --

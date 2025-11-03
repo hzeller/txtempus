@@ -15,6 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <cstdint>
+#include <ctime>
+
+#include "carrier-power.h"
 #include "time-signal-source.h"
 
 // Similar to WWVB, JJY uses BCD, but usually has a zero bit between the digits.

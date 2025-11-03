@@ -18,8 +18,9 @@
 #ifndef RPI_HARDWARE_CONTROL_IMPLEMENTATION_H
 #define RPI_HARDWARE_CONTROL_IMPLEMENTATION_H
 
-#include <stdint.h>
+#include <cstdint>
 
+#include "carrier-power.h"
 #include "hardware-control.h"
 
 // -- Implementation for Raspberry Pi Series --

@@ -17,7 +17,10 @@
 
 #include "hardware-control.h"
 
-#include "hardware-control-implementation.h"
+#include <memory>
+
+#include "carrier-power.h"
+#include "hardware-control-implementation.h"  // Chosen by CMake -DPLATFORM
 
 HardwareControl::HardwareControl()
     : pimpl(std::unique_ptr<Implementation>(new Implementation())) {}

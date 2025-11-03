@@ -15,6 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <cstdint>
+#include <ctime>
+
+#include "carrier-power.h"
 #include "time-signal-source.h"
 
 static uint64_t to_bcd(uint8_t n) { return (((n / 10) % 10) << 4) | (n % 10); }

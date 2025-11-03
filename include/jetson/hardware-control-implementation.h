@@ -23,8 +23,7 @@
 
 #include <JetsonGPIO.h>
 
-#include <iostream>
-
+#include "carrier-power.h"
 #include "hardware-control.h"
 
 // -- Implementation for Nvidia Jetson Series --

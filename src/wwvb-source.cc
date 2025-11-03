@@ -13,6 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://gnu.org/licenses/gpl-2.0.txt>
 
+#include <cstdint>
+#include <ctime>
+
+#include "carrier-power.h"
 #include "time-signal-source.h"
 
 // WWVB uses BCD, but always has a zero bit between the digits.
