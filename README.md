@@ -29,18 +29,17 @@ clock sources inside these, check out that bug for a workaround.
 #### SunxiH3 - OrangePI PC
 So far, it has been tested on an OrangePI PC. Any H3 based boards should work.
 The H3 has only one PWM available - PWM0. This - on the OrabgePI PC board - has
-a clock output on the 3-pin header debug UART UART0. The PWM output is the PA5 pin, connected to
-the middle pin of the debug UART. For amplitude modulation PA6 (GPIO17) is used, just as in case of thePi.
+a clock output on the 3-pin header debug UART UART0.
+The PWM output is the PA5 pin, connected to the middle pin of the debug UART.
+For amplitude modulation PA6 (GPIO17) is used, just as in case of thePi.
 
-One may consider using PA4 as the amplitude modulation pin- next to the PWM clock pin - but my
-experience shows that the board would not normally boot with the default settings if the antenna
-is connected to the debug UART.
-
+One may consider using PA4 as the amplitude modulation pin- next to the PWM
+clock pin - but my experience shows that the board would not normally boot
+with the default settings if the antenna is connected to the debug UART.
 
 #### Nvidia Jetson Series (experimental)
-So far, it has been tested only on a Jetson Nano,
-but all Jetson devices except for TX1 and TX2 (there is no available pwm pin) are supported.
-
+So far, it has been tested only on a Jetson Nano, but all Jetson devices except
+for TX1 and TX2 (there is no available pwm pin) are supported.
 
 ### Supported Time Services
 #### DCF77
