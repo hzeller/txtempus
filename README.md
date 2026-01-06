@@ -53,6 +53,121 @@ The Raspberry Pi has ways to create frequencies by integer division and
 fractional jitter around that, which allows us to generate a frequency
 of 77500.003Hz, which is close enough. Can be chosen with `-s DCF77` option.
 
+##### DCF77 Meteotime Weather
+
+DCF77 also transmits encrypted weather data (Meteotime) in bits 1-14, which
+some weather station clocks can decode. txtempus supports transmitting
+custom weather data using the `-W` flag.
+
+**How it works:** DCF77 transmits weather for **90 different regions** across
+Europe, with each region's data transmitted at specific times (every 3 minutes).
+The protocol supports **4-day forecasts** (today, tomorrow, day+2, day+3).
+
+**Weather Codes (0-15):**
+| Code | Day | Night |
+|------|-----|-------|
+| 0 | Reserved | Reserved |
+| 1 | Sunny | Clear |
+| 2 | Partly clouded | Partly clouded |
+| 3 | Mostly clouded | Mostly clouded |
+| 4 | Overcast | Overcast |
+| 5 | High fog | High fog |
+| 6 | Fog | Fog |
+| 7 | Showers | Showers |
+| 8 | Light rain | Light rain |
+| 9 | Heavy rain | Heavy rain |
+| 10 | Frontal storms | Frontal storms |
+| 11 | Heat storms | Heat storms |
+| 12 | Sleet showers | Sleet showers |
+| 13 | Snow showers | Snow showers |
+| 14 | Sleet | Sleet |
+| 15 | Snow | Snow |
+
+**Extreme Weather Codes (0-15):**
+| Code | Meaning |
+|------|---------|
+| 0 | None |
+| 1-3 | Heavy weather (24h/day/night) |
+| 4-6 | Storm (24h/day/night) |
+| 7-8 | Wind gusts (day/night) |
+| 9-11 | Icy rain (morning/afternoon/night) |
+| 12 | Fine dust | 13 | Ozone | 14 | Radiation | 15 | High water |
+
+**Wind Direction Codes (0-15):**
+| Code | Direction |
+|------|-----------|
+| 0 | North | 1 | Northeast | 2 | East | 3 | Southeast |
+| 4 | South | 5 | Southwest | 6 | West | 7 | Northwest |
+| 8 | Changeable | 9 | Foehn | 10 | Bise | 11 | Mistral |
+
+**Key Regions:**
+| Region | City |
+|--------|------|
+| 12 | D - Frankfurt am Main |
+| 22 | D - Hannover |
+| 26 | D - Muenchen |
+| 32 | CH - Zuerich |
+| 42 | NL - Amsterdam |
+| 52 | D - Berlin |
+| 58 | N - Oslo |
+| 59 | D - Stuttgart |
+
+**CLI Usage (sets weather for today, applies to all forecast days):**
+
+```bash
+# Set sunny weather for ALL 90 regions: 25°C day / 18°C night
+sudo ./txtempus -s DCF77 -v -W --set-all 1 1 25 18
+
+# Set weather for specific regions
+sudo ./txtempus -s DCF77 -v -W \
+  --set 26 1 1 25 18 \      # Muenchen: sunny, 25/18°C
+  --set 32 8 8 12 8 \       # Zuerich: light rain, 12/8°C
+  --set 52 15 15 -5 -10     # Berlin: snow, -5/-10°C
+
+# With all parameters: day night temp_d temp_n extreme rain% wind_dir wind_bft
+sudo ./txtempus -s DCF77 -v -W --set-all 9 9 15 10 10 80 5 7
+# Heavy rain, storms code 10, 80% rain, SW wind, 7 Bft
+```
+
+**Runtime Updates via Control FIFO:**
+
+When weather is enabled (`-W`), a FIFO is created at `/tmp/txtempus.fifo`:
+
+```bash
+# Set weather for region (applies to ALL forecast days)
+echo "set 26 1 1 25 18" > /tmp/txtempus.fifo
+
+# Set weather for specific forecast day (0=today, 1=tomorrow, 2=day+2, 3=day+3)
+echo "forecast 26 0 1 1 25 18" > /tmp/txtempus.fifo  # today: sunny
+echo "forecast 26 1 8 8 15 10" > /tmp/txtempus.fifo  # tomorrow: rain
+
+# Set all 90 regions, all forecast days
+echo "set_all 8 8 12 8" > /tmp/txtempus.fifo
+
+# Set all 90 regions for specific forecast day
+echo "forecast_all 0 1 1 25 18" > /tmp/txtempus.fifo  # today: all sunny
+echo "forecast_all 1 9 9 12 8" > /tmp/txtempus.fifo   # tomorrow: all heavy rain
+
+# Other commands
+echo "reset" > /tmp/txtempus.fifo   # Clear all weather
+echo "status" > /tmp/txtempus.fifo  # Show pending status
+echo "list" > /tmp/txtempus.fifo    # List configured regions
+echo "help" > /tmp/txtempus.fifo    # Show help
+```
+
+**Command format:** `set <region> <day> <night> <temp_d> <temp_n> [extreme] [rain%] [wind_dir] [wind_bft]`
+
+**Fallback behavior:** If a specific forecast day isn't set, today's weather is used.
+If a region isn't configured, default weather (sunny 20°C) is transmitted.
+
+**Note:** Responses appear on txtempus stderr (not the FIFO).
+
+**Safe Updates:** Changes are staged and applied at the start of the next
+3-minute cycle to avoid corrupting the currently transmitting region's data.
+
+**Verbose Output:** With `-v`, txtempus shows which region and forecast day
+is being transmitted.
+
 #### WWVB
 The [WWVB] (USA) is on a 60kHz carrier, and also transmits one bit per second
 with different attenuation times (200ms zero, 500ms one; 800ms sync) and

@@ -13,6 +13,9 @@ set(CMAKE_INSTALL_PREFIX /usr)
 set(SRC_FILES
     src/txtempus.cc
     src/dcf77-source.cc
+    src/dcf77-weather-crypt.cc
+    src/dcf77-weather.cc
+    src/dcf77-control.cc
     src/wwvb-source.cc
     src/jjy-source.cc
     src/msf-source.cc

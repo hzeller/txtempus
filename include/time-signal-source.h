@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "carrier-power.h"
+#include "dcf77-weather.h"
 
 struct ModulationDuration {
   CarrierPower power;
@@ -42,7 +43,7 @@ class TimeSignalSource {
   // Called once at the beginning of a minute starting with
   // the transmission to prepare the necessary data bits to be
   // sent.
-  // Note, some time singals are sent to be valid when the
+  // Note, some time signals are sent to be valid when the
   // end of the minute is reached, so these implementations would need to
   // add 60 seconds to this.
   // The provided time is guaranteed to be an even minute, i.e. divisible by 60.
@@ -63,14 +64,48 @@ class TimeSignalSource {
 };
 
 // -- Various implementations.
+
 class DCF77TimeSignalSource : public TimeSignalSource {
  public:
   int GetCarrierFrequencyHz() const final { return 77500; }
-  void PrepareMinute(time_t t) final;
-  SecondModulation GetModulationForSecond(int second) final;
+  void PrepareMinute(time_t t) override;
+  SecondModulation GetModulationForSecond(int second) override;
+
+ protected:
+  uint64_t time_bits_ = 0;
+};
+
+// DCF77 with Meteotime weather data (per-region, double-buffered)
+class DCF77WeatherTimeSignalSource : public DCF77TimeSignalSource {
+ public:
+  void PrepareMinute(time_t t) override;
+
+  // Set weather for a specific region and forecast day (staged, applies next cycle)
+  // forecast_day: 0=today, 1=tomorrow, 2=day+2, 3=day+3
+  void SetRegionWeather(int region, int forecast_day, const RegionWeather& weather);
+
+  // Set weather for a specific region, all forecast days (staged)
+  void SetRegionWeather(int region, const RegionWeather& weather);
+
+  // Set same weather for all 90 regions (staged)
+  void SetAllRegionsWeather(const RegionWeather& weather);
+
+  // Reset all region weather (staged)
+  void ResetAllWeather();
+
+  // Set default weather for unconfigured regions
+  void SetDefaultWeather(const RegionWeather& weather);
+
+  void SetVerbose(bool v) { verbose_ = v; }
+
+  const RegionWeatherStore& GetWeatherStore() const { return weather_store_; }
+  RegionWeatherStore& GetWeatherStore() { return weather_store_; }
 
  private:
-  uint64_t time_bits_;
+  RegionWeatherStore weather_store_;
+  uint64_t weather_cipher_ = 0;
+  int chunk_index_ = 0;
+  bool verbose_ = false;
 };
 
 class WWVBTimeSignalSource : public TimeSignalSource {
