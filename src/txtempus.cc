@@ -45,6 +45,8 @@ int getopt(int, char *const *, const char *);  // NOLINT
 #include <memory>
 
 #include "carrier-power.h"
+#include "dcf77-control.h"
+#include "dcf77-weather.h"
 #include "hardware-control.h"
 #include "time-signal-source.h"
 
@@ -118,8 +120,14 @@ void PrintModulationChart(const TimeSignalSource::SecondModulation &mod) {
   fprintf(stderr, "]\n");
 }
 
-std::unique_ptr<TimeSignalSource> CreateTimeSourceFromName(const char *n) {
+// Factory function to create the appropriate time signal source.
+// DCF77 has two variants: standard and weather-enabled (Meteotime).
+std::unique_ptr<TimeSignalSource> CreateTimeSourceFromName(const char *n,
+                                                            bool weather_mode) {
   if (strcasecmp(n, "DCF77") == 0) {
+    if (weather_mode) {
+      return std::make_unique<DCF77WeatherTimeSignalSource>();
+    }
     return std::make_unique<DCF77TimeSignalSource>();
   }
   if (strcasecmp(n, "WWVB") == 0) {
@@ -151,7 +159,27 @@ int usage(const char *msg, const char *progname) {
           "\t-c                    : Carrier wave only.\n"
           "\t-n                    : Dryrun, only showing modulation "
           "envelope.\n"
-          "\t-h                    : This help.\n",
+          "\t-h                    : This help.\n"
+          "\n"
+          "DCF77 Weather Options (Meteotime):\n"
+          "\t-W                    : Enable weather encoding (DCF77 only)\n"
+          "\t--set-all <day> <night> <temp_d> <temp_n>\n"
+          "\t                      : Set same weather for all 90 regions\n"
+          "\t--set <region> <day> <night> <temp_d> <temp_n>\n"
+          "\t                      : Set weather for specific region (0-89)\n"
+          "\t--control-fifo <path>  : Control FIFO for runtime updates\n"
+          "\t                        (default: /tmp/txtempus.fifo when -W)\n"
+          "\n"
+          "Weather codes: 0=Reserved, 1=Sunny/Clear, 2=Partly clouded,\n"
+          "  3=Mostly clouded, 4=Overcast, 5=High fog, 6=Fog, 7=Showers,\n"
+          "  8=Light rain, 9=Heavy rain, 10=Frontal storms, 11=Heat storms,\n"
+          "  12=Sleet showers, 13=Snow showers, 14=Sleet, 15=Snow\n"
+          "\n"
+          "Runtime control via FIFO (when -W enabled):\n"
+          "  echo 'set 26 1 1 25 18' > /tmp/txtempus.fifo\n"
+          "  echo 'set_all 8 8 12 8' > /tmp/txtempus.fifo\n"
+          "  echo 'reset' > /tmp/txtempus.fifo\n"
+          "  (Responses appear on txtempus stderr)\n",
           msg, progname);
   return 1;
 }
@@ -164,43 +192,124 @@ int main(int argc, char *argv[]) {
   time_t chosen_time = now;
   int zone_offset = 0;
   int ttl = INT_MAX;
-  int opt;
-  while ((opt = getopt(argc, argv, "t:z:r:vs:hnc")) != -1) {
-    switch (opt) {
-      case 'v':
-        verbose = true;
-        break;
-      case 't':
-        chosen_time = ParseLocalTime(optarg);
-        if (chosen_time <= 0) return usage("Invalid time string\n", argv[0]);
-        break;
-      case 'z':
-        zone_offset = atoi(optarg);
-        break;
-      case 'r':
-        ttl = atoi(optarg);
-        break;
-      case 's':
-        time_source = CreateTimeSourceFromName(optarg);
-        break;
-      case 'n':
-        dryrun = true;
-        verbose = true;
-        ttl = 1;
-        break;
-      case 'c':
-        carrier_only = true;
-        break;
-      default:
-        return usage("", argv[0]);
+  const char *service_name = nullptr;
+  bool weather_mode = false;
+  std::string control_socket_path;
+
+  // Collect region weather settings from CLI.
+  // These are applied before the main loop starts.
+  struct RegionSetting {
+    int region;
+    RegionWeather weather;
+  };
+  std::vector<RegionSetting> region_settings;
+  RegionWeather all_regions_weather;
+  bool set_all_regions = false;
+
+  // Parse command line options. We use manual parsing instead of getopt()
+  // to support long options like --set and --set-all for weather configuration.
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-v") == 0) {
+      verbose = true;
+    } else if (strcmp(argv[i], "-t") == 0 && i + 1 < argc) {
+      chosen_time = ParseLocalTime(argv[++i]);
+      if (chosen_time <= 0) return usage("Invalid time string\n", argv[0]);
+    } else if (strcmp(argv[i], "-z") == 0 && i + 1 < argc) {
+      zone_offset = atoi(argv[++i]);
+    } else if (strcmp(argv[i], "-r") == 0 && i + 1 < argc) {
+      ttl = atoi(argv[++i]);
+    } else if (strcmp(argv[i], "-s") == 0 && i + 1 < argc) {
+      service_name = argv[++i];
+    } else if (strcmp(argv[i], "-n") == 0) {
+      dryrun = true;
+      verbose = true;
+      ttl = 1;
+    } else if (strcmp(argv[i], "-c") == 0) {
+      carrier_only = true;
+    } else if (strcmp(argv[i], "-h") == 0) {
+      return usage("", argv[0]);
+    } else if (strcmp(argv[i], "-W") == 0) {
+      weather_mode = true;
+    } else if (strcmp(argv[i], "--set-all") == 0 && i + 4 < argc) {
+      weather_mode = true;
+      set_all_regions = true;
+      all_regions_weather.weather_day = atoi(argv[++i]);
+      all_regions_weather.weather_night = atoi(argv[++i]);
+      all_regions_weather.temperature_day = atoi(argv[++i]);
+      all_regions_weather.temperature_night = atoi(argv[++i]);
+    } else if (strcmp(argv[i], "--set") == 0 && i + 5 < argc) {
+      weather_mode = true;
+      RegionSetting rs;
+      rs.region = atoi(argv[++i]);
+      rs.weather.weather_day = atoi(argv[++i]);
+      rs.weather.weather_night = atoi(argv[++i]);
+      rs.weather.temperature_day = atoi(argv[++i]);
+      rs.weather.temperature_night = atoi(argv[++i]);
+      region_settings.push_back(rs);
+    } else if (strcmp(argv[i], "--control-fifo") == 0 && i + 1 < argc) {
+      control_socket_path = argv[++i];
+    } else if (argv[i][0] == '-') {
+      return usage("Unknown option\n", argv[0]);
     }
   }
 
   chosen_time += zone_offset * (time_t)60;
   const int time_offset = chosen_time - now;
 
-  if (!time_source) {
+  if (!service_name) {
     return usage("Please choose a service name with -s option\n", argv[0]);
+  }
+
+  time_source = CreateTimeSourceFromName(service_name, weather_mode);
+  if (!time_source) {
+    return usage("Unknown service name\n", argv[0]);
+  }
+
+  // Set up weather encoding if enabled. The weather source wraps the base
+  // DCF77 source and injects Meteotime data into bits 1-14 each minute.
+  std::unique_ptr<DCF77ControlSocket> control_socket;
+  DCF77WeatherTimeSignalSource *weather_source = nullptr;
+  if (weather_mode) {
+    weather_source =
+        dynamic_cast<DCF77WeatherTimeSignalSource *>(time_source.get());
+    if (weather_source) {
+      weather_source->SetVerbose(verbose);
+
+      // Apply CLI settings
+      if (set_all_regions) {
+        weather_source->SetAllRegionsWeather(all_regions_weather);
+        if (verbose) {
+          fprintf(stderr,
+                  "Set all regions: %s/%s %d/%d°C\n",
+                  weather_day_names[all_regions_weather.weather_day & 0xf],
+                  weather_night_names[all_regions_weather.weather_night & 0xf],
+                  all_regions_weather.temperature_day,
+                  all_regions_weather.temperature_night);
+        }
+      }
+      for (const auto &rs : region_settings) {
+        weather_source->SetRegionWeather(rs.region, rs.weather);
+        if (verbose) {
+          fprintf(stderr, "Added region %d (%s): %s/%s %d/%d°C\n", rs.region,
+                  region_names[rs.region],
+                  weather_day_names[rs.weather.weather_day & 0xf],
+                  weather_night_names[rs.weather.weather_night & 0xf],
+                  rs.weather.temperature_day, rs.weather.temperature_night);
+        }
+      }
+
+      // Start control socket for runtime weather updates.
+      // Allows external programs to modify weather data while transmitting.
+      control_socket = std::make_unique<DCF77ControlSocket>(weather_source);
+      if (control_socket_path.empty()) {
+        control_socket_path = "/tmp/txtempus.fifo";
+      }
+      if (!dryrun && control_socket->Start(control_socket_path)) {
+        if (verbose) {
+          fprintf(stderr, "Control socket: %s\n", control_socket_path.c_str());
+        }
+      }
+    }
   }
 
   HardwareControl hw{};
@@ -236,7 +345,13 @@ int main(int argc, char *argv[]) {
       WaitUntil(target_wait);
       if (interrupted) break;
 
-      if (verbose) fprintf(stderr, "\b\b\b:%02d", second);
+      // Poll control socket for weather updates from external clients.
+      // Changes are staged and applied at the start of each 3-minute cycle.
+      if (control_socket) {
+        control_socket->Poll();
+      }
+
+      if (verbose && !dryrun) fprintf(stderr, "\b\b\b:%02d", second);
 
       // Depending on the time source, there can be multiple amplitude
       // modulation changes per second.
